@@ -69,8 +69,12 @@ export default function Home() {
                     </>
                   ) : (
                     <>
-                      <Button variant="ghost" className="text-gray-300 hover:text-white">
-                        Features
+                      <Button 
+                        variant="ghost" 
+                        className="text-gray-300 hover:text-white"
+                        onClick={() => window.location.href = '/gallery'}
+                      >
+                        Gallery
                       </Button>
                       <Button variant="ghost" className="text-gray-300 hover:text-white">
                         Pricing
@@ -147,7 +151,12 @@ export default function Home() {
                   <Upload className="w-5 h-5 mr-2" />
                   Start Creating
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-10 py-4 border-gray-700 text-gray-300 hover:bg-gray-900 hover:border-gray-600">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="text-lg px-10 py-4 border-gray-700 text-gray-300 hover:bg-gray-900 hover:border-gray-600"
+                  onClick={() => window.location.href = '/gallery'}
+                >
                   <Grid3X3 className="w-5 h-5 mr-2" />
                   Explore Galleries
                 </Button>

@@ -258,7 +258,11 @@ export default function Dashboard() {
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredFiles.map((file) => (
-              <Card key={file.id} className="group hover:border-emerald-500/50 transition-all duration-300 overflow-hidden">
+              <Card 
+                key={file.id} 
+                className="group hover:border-emerald-500/50 transition-all duration-300 overflow-hidden cursor-pointer"
+                onClick={() => window.location.href = `/media/${file.id}`}
+              >
                 <div className="aspect-video bg-gray-800 relative overflow-hidden">
                   <img 
                     src={file.thumbnailUrl || file.url} 
