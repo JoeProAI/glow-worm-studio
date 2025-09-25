@@ -10,7 +10,7 @@ import { Input } from "../../../components/ui/input";
 import { MediaService, MediaFile } from "../../../lib/media-service";
 import { AIAnalysis } from "../../../lib/ai-service";
 import { ProcessingStatusPanel, useProcessingStatus } from "../../../components/processing-status";
-import { localStorageService } from "../../../lib/local-storage-service";
+import { isFirebaseConfigured } from "../../../lib/firebase-config";
 
 export default function Dashboard() {
   const { user, userProfile } = useAuth();
@@ -34,11 +34,32 @@ export default function Dashboard() {
     
     try {
       setLoading(true);
-      // Load from local storage service
-      const storedFiles = await localStorageService.getUserFiles(user.uid);
-      const mediaFiles = storedFiles.map(file => localStorageService.toMediaFile(file));
-      setFiles(mediaFiles);
-      console.log(`📁 Loaded ${mediaFiles.length} files from local storage`);
+      
+      if (isFirebaseConfigured()) {
+        // Load from Firebase Storage
+        const userFiles = await MediaService.getUserMedia(user.uid);
+        setFiles(userFiles);
+        console.log(`🔥 Loaded ${userFiles.length} files from Firebase`);
+      } else {
+        // Demo mode with sample data
+        console.log('⚠️ Firebase not configured - showing demo data');
+        const demoFiles: MediaFile[] = [
+          {
+            id: 'demo1',
+            name: 'sample-image.jpg',
+            originalName: 'sample-image.jpg',
+            type: 'image',
+            mimeType: 'image/jpeg',
+            size: 2048000,
+            url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+            uploadedAt: new Date(Date.now() - 86400000),
+            userId: user.uid,
+            tags: ['landscape', 'nature', 'demo'],
+            isPublic: false
+          }
+        ];
+        setFiles(demoFiles);
+      }
     } catch (error) {
       console.error('Failed to load media:', error);
       setFiles([]); // Start with empty array if loading fails
@@ -63,32 +84,66 @@ export default function Dashboard() {
           // Update status to analyzing
           updateFile(file.name, { 
             status: 'analyzing', 
-            progress: 30 
+            progress: 20 
           });
           
-          // Store file in local storage service
-          const storedFile = await localStorageService.uploadFile(file, user.uid);
-          
-          updateFile(file.name, { 
-            progress: 70 
-          });
-          
-          // Convert to MediaFile format
-          const mediaFile = localStorageService.toMediaFile(storedFile);
-          
-          // Update status to completed
-          updateFile(file.name, { 
-            status: 'completed', 
-            progress: 100 
-          });
-          
-          // Add to files list
-          setFiles(prev => [mediaFile, ...prev]);
+          if (isFirebaseConfigured()) {
+            // Upload to Firebase Storage
+            updateFile(file.name, { 
+              status: 'uploading', 
+              progress: 40 
+            });
+            
+            const uploadedFile = await MediaService.uploadFile(file, user.uid);
+            
+            // Update status to completed
+            updateFile(file.name, { 
+              status: 'completed', 
+              progress: 100 
+            });
+            
+            // Add to files list
+            setFiles(prev => [uploadedFile, ...prev]);
+            
+            console.log(`🔥 File uploaded to Firebase: ${file.name}`);
+          } else {
+            // Demo mode - create temporary file object
+            const fileUrl = URL.createObjectURL(file);
+            
+            updateFile(file.name, { 
+              progress: 70 
+            });
+            
+            const demoFile: MediaFile = {
+              id: Date.now().toString() + Math.random().toString(36),
+              name: file.name,
+              originalName: file.name,
+              type: file.type.startsWith('image/') ? 'image' : 
+                    file.type.startsWith('video/') ? 'video' : 
+                    file.type.startsWith('audio/') ? 'audio' : 'document',
+              mimeType: file.type,
+              size: file.size,
+              url: fileUrl,
+              uploadedAt: new Date(),
+              userId: user.uid,
+              tags: [file.type.split('/')[1] || 'file', 'demo'],
+              isPublic: false
+            };
+            
+            // Update status to completed
+            updateFile(file.name, { 
+              status: 'completed', 
+              progress: 100 
+            });
+            
+            // Add to files list
+            setFiles(prev => [demoFile, ...prev]);
+            
+            console.log(`⚠️ Demo mode: File preview created for ${file.name}`);
+          }
           
           // Remove from processing after a delay
           setTimeout(() => removeFile(file.name), 2000);
-          
-          console.log(`✅ File stored successfully: ${file.name}`);
           
         } catch (fileError) {
           console.error(`Failed to process ${file.name}:`, fileError);
@@ -108,9 +163,13 @@ export default function Dashboard() {
 
   const deleteFile = async (fileId: string) => {
     try {
-      await localStorageService.deleteFile(fileId);
+      if (isFirebaseConfigured()) {
+        await MediaService.deleteFile(fileId);
+        console.log(`🔥 File deleted from Firebase: ${fileId}`);
+      } else {
+        console.log(`⚠️ Demo mode: File removed from view: ${fileId}`);
+      }
       setFiles(prev => prev.filter(f => f.id !== fileId));
-      console.log(`🗑️ File deleted: ${fileId}`);
     } catch (error) {
       console.error('Failed to delete file:', error);
     }
