@@ -17,14 +17,23 @@ export default function Home() {
     setAuthModalOpen(true);
   };
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Floating Background Elements */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-white/3 rounded-full blur-lg animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-40 left-1/4 w-40 h-40 bg-white/4 rounded-full blur-2xl animate-pulse" style={{animationDelay: '4s'}}></div>
+        <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-white/3 rounded-full blur-xl animate-pulse" style={{animationDelay: '6s'}}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-white/2 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+      </div>
+
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-gray-800">
+      <nav className="fixed top-0 w-full z-50 bg-black/90 backdrop-blur-xl border-b border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-lg"></div>
-              <span className="text-xl font-semibold text-white">
+              <div className="w-8 h-8 bg-white rounded-lg"></div>
+              <span className="text-xl font-medium text-white">
                 Glow Worm Studio
               </span>
             </div>
@@ -71,24 +80,27 @@ export default function Home() {
                     <>
                       <Button 
                         variant="ghost" 
-                        className="text-gray-300 hover:text-white"
+                        className="text-white hover:text-gray-300 font-medium"
                         onClick={() => window.location.href = '/gallery'}
                       >
                         Gallery
                       </Button>
-                      <Button variant="ghost" className="text-gray-300 hover:text-white">
+                      <Button 
+                        variant="ghost" 
+                        className="text-white hover:text-gray-300 font-medium"
+                      >
                         Pricing
                       </Button>
                       <Button
                         onClick={() => handleAuthClick('signin')}
                         variant="ghost"
-                        className="text-gray-300 hover:text-white"
+                        className="text-white hover:text-gray-300 font-medium"
                       >
                         Sign In
                       </Button>
                       <Button
                         onClick={() => handleAuthClick('signup')}
-                        className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+                        className="bg-white text-black hover:bg-gray-100 font-medium px-6 py-2"
                       >
                         Get Started
                       </Button>
@@ -102,7 +114,7 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-24 px-4 sm:px-6 lg:px-8">
+      <section className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-6xl mx-auto text-center">
           <div className="mb-12">
             <h1 className="text-5xl md:text-6xl font-medium mb-6 tracking-tight text-white">
@@ -110,7 +122,7 @@ export default function Home() {
               <br />
               for modern teams
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
               Organize, search, and present your digital assets with enterprise-grade tools 
               designed for professional workflows.
             </p>
@@ -157,7 +169,7 @@ export default function Home() {
           </div>
 
           {/* Feature Grid */}
-          <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto relative z-10">
             <div className="text-left">
               <h3 className="text-xl font-medium text-white mb-3">Asset Management</h3>
               <p className="text-gray-500 leading-relaxed text-sm">
@@ -183,7 +195,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-gray-800">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-gray-800 relative z-10">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-medium text-white mb-4">
             Ready to get started?
