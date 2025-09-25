@@ -287,13 +287,23 @@ EOF`);
       // Convert buffer to base64 for transfer
       const base64Data = fileBuffer.toString('base64');
       
-      // Use a more robust upload method
-      await sandbox.process.executeCommand(`cat > ${targetPath} << 'EOF_BASE64'
-${base64Data}
-EOF_BASE64`);
+      // Split base64 data into chunks to avoid command line length limits
+      const chunkSize = 1000;
+      const chunks = [];
+      for (let i = 0; i < base64Data.length; i += chunkSize) {
+        chunks.push(base64Data.slice(i, i + chunkSize));
+      }
+      
+      // Create empty file first
+      await sandbox.process.executeCommand(`touch ${targetPath}.b64`);
+      
+      // Upload in chunks
+      for (let i = 0; i < chunks.length; i++) {
+        await sandbox.process.executeCommand(`echo -n "${chunks[i]}" >> ${targetPath}.b64`);
+      }
       
       // Decode the base64 data
-      await sandbox.process.executeCommand(`base64 -d ${targetPath} > ${targetPath}.decoded && mv ${targetPath}.decoded ${targetPath}`);
+      await sandbox.process.executeCommand(`base64 -d ${targetPath}.b64 > ${targetPath} && rm ${targetPath}.b64`);
       
       // Verify upload
       const verifyResult = await sandbox.process.executeCommand(`ls -la ${targetPath}`);
