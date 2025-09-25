@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from "../../components/ui/button";
 import { Upload, Database, Grid3X3, Video, User, LogOut } from "lucide-react";
 import { AuthModal } from "../../components/auth/auth-modal";
@@ -39,7 +40,13 @@ export default function Home() {
                         <div className="flex items-center space-x-2">
                           <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center">
                             {userProfile?.photoURL ? (
-                              <img src={userProfile.photoURL} alt="Profile" className="w-8 h-8 rounded-full" />
+                              <Image 
+                                src={userProfile.photoURL} 
+                                alt="Profile" 
+                                width={32}
+                                height={32}
+                                className="w-8 h-8 rounded-full" 
+                              />
                             ) : (
                               <User className="w-4 h-4 text-white" />
                             )}

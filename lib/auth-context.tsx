@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Create or update user profile in Firestore
-  const createUserProfile = async (user: User, additionalData?: any) => {
+  const createUserProfile = async (user: User, additionalData?: Record<string, unknown>) => {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
 

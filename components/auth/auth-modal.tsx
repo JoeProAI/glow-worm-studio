@@ -38,8 +38,8 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModal
         await signUp(email, password, displayName);
       }
       onClose();
-    } catch (error: any) {
-      setError(error.message || 'An error occurred');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -56,8 +56,8 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModal
         await signInWithGithub();
       }
       onClose();
-    } catch (error: any) {
-      setError(error.message || 'An error occurred');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'An error occurred');
     } finally {
       setLoading(false);
     }
