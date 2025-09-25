@@ -12,50 +12,60 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase only if it hasn't been initialized and is properly configured
-let app;
+// Check if Firebase is properly configured first
+const hasRequiredConfig = !!(
+  firebaseConfig.apiKey &&
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId &&
+  firebaseConfig.storageBucket &&
+  firebaseConfig.messagingSenderId &&
+  firebaseConfig.appId
+);
+
+const hasValidConfig = firebaseConfig.apiKey !== 'your_api_key_here' &&
+                      firebaseConfig.messagingSenderId !== 'your_sender_id_here' &&
+                      firebaseConfig.appId !== 'your_app_id_here';
+
+const isConfigured = hasRequiredConfig && hasValidConfig;
+
+// Initialize Firebase only if properly configured
+let app: any = null;
 let auth: any = null;
 let db: any = null;
 let storage: any = null;
 
-try {
-  if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
-  }
+if (isConfigured) {
+  try {
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApps()[0];
+    }
 
-  // Only initialize services if we have a valid app
-  if (app) {
+    // Initialize services
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+    
+    console.log('🔥 Firebase initialized successfully');
+  } catch (error) {
+    console.error('Firebase initialization failed:', error);
+    // Reset to null on error
+    app = null;
+    auth = null;
+    db = null;
+    storage = null;
   }
-} catch (error) {
-  console.log('⚠️ Firebase initialization skipped - not configured');
-  // Services remain null, which will be handled by isFirebaseConfigured()
+} else {
+  console.log('⚠️ Firebase not configured - running in demo mode');
 }
 
-// Export services (may be null if not configured)
+// Export services (will be null if not configured)
 export { auth, db, storage };
 
 // Check if Firebase is properly configured
 export const isFirebaseConfigured = () => {
-  const hasRequiredConfig = !!(
-    firebaseConfig.apiKey &&
-    firebaseConfig.authDomain &&
-    firebaseConfig.projectId &&
-    firebaseConfig.storageBucket &&
-    firebaseConfig.messagingSenderId &&
-    firebaseConfig.appId
-  );
-  
-  // Additional check: make sure we're not using placeholder values
-  const hasValidConfig = firebaseConfig.apiKey !== 'your_api_key_here' &&
-                        firebaseConfig.messagingSenderId !== 'your_sender_id_here' &&
-                        firebaseConfig.appId !== 'your_app_id_here';
-  
-  return hasRequiredConfig && hasValidConfig;
+  return isConfigured && auth !== null && db !== null && storage !== null;
 };
 
 // Log configuration status
