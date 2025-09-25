@@ -1,5 +1,5 @@
 import { storage, db } from './firebase-config';
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { collection, addDoc, getDocs, query, where, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { AIAnalysis } from './ai-service';
 import { EnhancedAIAnalysis } from './enhanced-ai-service';

@@ -12,22 +12,36 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase only if it hasn't been initialized
+// Initialize Firebase only if it hasn't been initialized and is properly configured
 let app;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
+let auth: any = null;
+let db: any = null;
+let storage: any = null;
+
+try {
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+  } else {
+    app = getApps()[0];
+  }
+
+  // Only initialize services if we have a valid app
+  if (app) {
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+  }
+} catch (error) {
+  console.log('⚠️ Firebase initialization skipped - not configured');
+  // Services remain null, which will be handled by isFirebaseConfigured()
 }
 
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+// Export services (may be null if not configured)
+export { auth, db, storage };
 
 // Check if Firebase is properly configured
 export const isFirebaseConfigured = () => {
-  return !!(
+  const hasRequiredConfig = !!(
     firebaseConfig.apiKey &&
     firebaseConfig.authDomain &&
     firebaseConfig.projectId &&
@@ -35,6 +49,13 @@ export const isFirebaseConfigured = () => {
     firebaseConfig.messagingSenderId &&
     firebaseConfig.appId
   );
+  
+  // Additional check: make sure we're not using placeholder values
+  const hasValidConfig = firebaseConfig.apiKey !== 'your_api_key_here' &&
+                        firebaseConfig.messagingSenderId !== 'your_sender_id_here' &&
+                        firebaseConfig.appId !== 'your_app_id_here';
+  
+  return hasRequiredConfig && hasValidConfig;
 };
 
 // Log configuration status
