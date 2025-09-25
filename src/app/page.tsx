@@ -1,7 +1,20 @@
+'use client';
+
+import { useState } from 'react';
 import { Button } from "../../components/ui/button";
-import { Upload, Database, Grid3X3, Video } from "lucide-react";
+import { Upload, Database, Grid3X3, Video, User, LogOut } from "lucide-react";
+import { AuthModal } from "../../components/auth/auth-modal";
+import { useAuth } from "../../lib/auth-context";
 
 export default function Home() {
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const { user, userProfile, logout, loading } = useAuth();
+
+  const handleAuthClick = (mode: 'signin' | 'signup') => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
   return (
     <div className="min-h-screen">
       {/* Navigation */}
@@ -15,15 +28,59 @@ export default function Home() {
               </span>
             </div>
             <div className="flex items-center space-x-6">
-              <Button variant="ghost" className="text-gray-300 hover:text-white">
-                Features
-              </Button>
-              <Button variant="ghost" className="text-gray-300 hover:text-white">
-                Pricing
-              </Button>
-              <Button className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
-                Get Started
-              </Button>
+              {!loading && (
+                <>
+                  {user ? (
+                    <>
+                      <Button variant="ghost" className="text-gray-300 hover:text-white">
+                        Dashboard
+                      </Button>
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center">
+                            {userProfile?.photoURL ? (
+                              <img src={userProfile.photoURL} alt="Profile" className="w-8 h-8 rounded-full" />
+                            ) : (
+                              <User className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                          <span className="text-sm text-gray-300">{userProfile?.displayName}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={logout}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <LogOut className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Button variant="ghost" className="text-gray-300 hover:text-white">
+                        Features
+                      </Button>
+                      <Button variant="ghost" className="text-gray-300 hover:text-white">
+                        Pricing
+                      </Button>
+                      <Button
+                        onClick={() => handleAuthClick('signin')}
+                        variant="ghost"
+                        className="text-gray-300 hover:text-white"
+                      >
+                        Sign In
+                      </Button>
+                      <Button
+                        onClick={() => handleAuthClick('signup')}
+                        className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+                      >
+                        Get Started
+                      </Button>
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -49,14 +106,33 @@ export default function Home() {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-20">
-            <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white text-lg px-10 py-4">
-              <Upload className="w-5 h-5 mr-2" />
-              Upload Media
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-10 py-4 border-gray-700 text-gray-300 hover:bg-gray-900 hover:border-gray-600">
-              <Grid3X3 className="w-5 h-5 mr-2" />
-              Explore Galleries
-            </Button>
+            {user ? (
+              <>
+                <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white text-lg px-10 py-4">
+                  <Upload className="w-5 h-5 mr-2" />
+                  Upload Media
+                </Button>
+                <Button size="lg" variant="outline" className="text-lg px-10 py-4 border-gray-700 text-gray-300 hover:bg-gray-900 hover:border-gray-600">
+                  <Grid3X3 className="w-5 h-5 mr-2" />
+                  My Galleries
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white text-lg px-10 py-4"
+                  onClick={() => handleAuthClick('signup')}
+                >
+                  <Upload className="w-5 h-5 mr-2" />
+                  Start Creating
+                </Button>
+                <Button size="lg" variant="outline" className="text-lg px-10 py-4 border-gray-700 text-gray-300 hover:bg-gray-900 hover:border-gray-600">
+                  <Grid3X3 className="w-5 h-5 mr-2" />
+                  Explore Galleries
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Feature Grid */}
@@ -103,11 +179,22 @@ export default function Home() {
           <p className="text-xl text-gray-400 mb-10 font-light">
             Professional media management designed for creators, teams, and enterprises.
           </p>
-          <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white text-lg px-12 py-4">
+          <Button 
+            size="lg" 
+            className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white text-lg px-12 py-4"
+            onClick={() => handleAuthClick('signup')}
+          >
             Start Free Trial
           </Button>
         </div>
       </section>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authMode}
+      />
     </div>
   );
 }
