@@ -9,6 +9,7 @@ import { Upload, Image as ImageIcon, Video, File, Zap, Grid3X3, List, Search, Fi
 import { Input } from "../../../components/ui/input";
 import { MediaService, MediaFile } from "../../../lib/media-service";
 import { AIAnalysis } from "../../../lib/ai-service";
+import { ProcessingStatusPanel, useProcessingStatus } from "../../../components/processing-status";
 
 export default function Dashboard() {
   const { user, userProfile } = useAuth();
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'images' | 'videos' | 'documents'>('all');
+  const { processingFiles, addFile, updateFile, removeFile, clearCompleted } = useProcessingStatus();
 
   // Load user's media files
   useEffect(() => {
@@ -47,26 +49,106 @@ export default function Dashboard() {
     
     try {
       for (const file of acceptedFiles) {
-        // First, analyze the file with AI
-        const formData = new FormData();
-        formData.append('file', file);
+        // Add file to processing status
+        addFile(file.name, file.size);
         
-        const analysisResponse = await fetch('/api/analyze', {
-          method: 'POST',
-          body: formData
-        });
-        
-        let aiAnalysis: AIAnalysis | undefined;
-        if (analysisResponse.ok) {
-          const analysisData = await analysisResponse.json();
-          aiAnalysis = analysisData.analysis;
+        try {
+          // First, analyze the file with Enhanced AI (Daytona support)
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('userId', user.uid);
+          
+          console.log(`🚀 Processing ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+          
+          // Update status to analyzing
+          updateFile(file.name, { 
+            status: 'analyzing', 
+            progress: 10 
+          });
+          
+          // Try enhanced analysis first
+          let analysisResponse = await fetch('/api/enhanced-analyze', {
+            method: 'POST',
+            body: formData
+          });
+          
+          let aiAnalysis: AIAnalysis | undefined;
+          let processingDetails: any = null;
+          
+          if (analysisResponse.ok) {
+            const enhancedData = await analysisResponse.json();
+            if (enhancedData.success) {
+              aiAnalysis = enhancedData.analysis;
+              processingDetails = enhancedData.metadata;
+              
+              // Update processing status with details
+              updateFile(file.name, {
+                processingMethod: processingDetails.processingMethod,
+                complexity: processingDetails.complexity,
+                processingTime: processingDetails.processingTime,
+                sandboxId: processingDetails.sandboxId,
+                progress: 70
+              });
+              
+              console.log(`✅ Enhanced analysis: ${processingDetails.processingMethod} (${processingDetails.complexity})`);
+              console.log(`⏱️ Processing time: ${processingDetails.processingTime}ms`);
+              if (processingDetails.sandboxId) {
+                console.log(`🏗️ Sandbox ID: ${processingDetails.sandboxId}`);
+              }
+            }
+          }
+          
+          // Fallback to basic analysis if enhanced fails
+          if (!aiAnalysis) {
+            console.log('⚠️ Enhanced analysis failed, using basic analysis...');
+            updateFile(file.name, { 
+              processingMethod: 'local',
+              complexity: 'simple',
+              progress: 40 
+            });
+            
+            analysisResponse = await fetch('/api/analyze', {
+              method: 'POST',
+              body: formData
+            });
+            
+            if (analysisResponse.ok) {
+              const analysisData = await analysisResponse.json();
+              aiAnalysis = analysisData.analysis;
+              updateFile(file.name, { progress: 70 });
+              console.log('✅ Basic analysis completed');
+            }
+          }
+          
+          // Update status to uploading
+          updateFile(file.name, { 
+            status: 'uploading', 
+            progress: 80 
+          });
+          
+          // Upload to Firebase with AI analysis
+          const uploadedFile = await MediaService.uploadFile(file, user.uid, aiAnalysis);
+          
+          // Update status to completed
+          updateFile(file.name, { 
+            status: 'completed', 
+            progress: 100 
+          });
+          
+          // Add to local state
+          setFiles(prev => [uploadedFile, ...prev]);
+          
+          // Remove from processing after a delay
+          setTimeout(() => removeFile(file.name), 3000);
+          
+        } catch (fileError) {
+          console.error(`Failed to process ${file.name}:`, fileError);
+          updateFile(file.name, { 
+            status: 'error', 
+            error: fileError instanceof Error ? fileError.message : 'Unknown error',
+            progress: 0 
+          });
         }
-        
-        // Upload to Firebase with AI analysis
-        const uploadedFile = await MediaService.uploadFile(file, user.uid, aiAnalysis);
-        
-        // Add to local state
-        setFiles(prev => [uploadedFile, ...prev]);
       }
     } catch (error) {
       console.error('Upload failed:', error);
@@ -163,6 +245,9 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Processing Status */}
+        <ProcessingStatusPanel files={processingFiles} />
+
         {/* Upload Area */}
         <Card className="mb-8">
           <CardContent className="p-8">
