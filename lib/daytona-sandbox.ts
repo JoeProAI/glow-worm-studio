@@ -169,7 +169,8 @@ export class OptimizedDaytonaSandboxManager {
       console.log(`✅ Environment ready: ${setupResult.message}`);
       
       // ⭐ UPLOAD FILE TO SANDBOX
-      await this.uploadFileToSandbox(sandbox, fileBuffer, config.fileName);
+      const safeFileName = await this.uploadFileToSandbox(sandbox, fileBuffer, config.fileName);
+      config.fileName = safeFileName; // Update config with safe filename
       
       // ⭐ DEPLOY PROCESSING SCRIPT
       const processingScript = this.generateOptimizedProcessingScript(config);
@@ -279,20 +280,30 @@ EOF`);
     try {
       console.log(`📤 Uploading file to sandbox: ${fileName}`);
       
+      // Sanitize filename to avoid shell injection
+      const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const targetPath = `/tmp/${safeFileName}`;
+      
       // Convert buffer to base64 for transfer
       const base64Data = fileBuffer.toString('base64');
       
-      await sandbox.process.executeCommand(`
-        echo "${base64Data}" | base64 -d > /tmp/${fileName}
-      `);
+      // Use a more robust upload method
+      await sandbox.process.executeCommand(`cat > ${targetPath} << 'EOF_BASE64'
+${base64Data}
+EOF_BASE64`);
+      
+      // Decode the base64 data
+      await sandbox.process.executeCommand(`base64 -d ${targetPath} > ${targetPath}.decoded && mv ${targetPath}.decoded ${targetPath}`);
       
       // Verify upload
-      const verifyResult = await sandbox.process.executeCommand(`ls -la /tmp/${fileName}`);
+      const verifyResult = await sandbox.process.executeCommand(`ls -la ${targetPath}`);
       console.log(`✅ File uploaded successfully: ${verifyResult.result.trim()}`);
+      
+      return safeFileName;
       
     } catch (error: any) {
       console.error('❌ File upload failed:', error);
-      throw new Error(`File upload failed: ${error.message}`);
+      throw new Error(`File upload failed: ${error.message || 'Unknown error'}`);
     }
   }
 
