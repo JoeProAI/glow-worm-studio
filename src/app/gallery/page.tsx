@@ -11,10 +11,8 @@ import {
   Clock, 
   Grid3X3, 
   Zap,
-  Eye,
   Heart,
   Share2,
-  Download,
   Search
 } from "lucide-react";
 import { Input } from "../../../components/ui/input";
