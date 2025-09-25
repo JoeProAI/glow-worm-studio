@@ -9,13 +9,11 @@ import { MediaService, MediaFile } from "../../../../lib/media-service";
 import { 
   ArrowLeft,
   Download,
-  Share2,
   Heart,
   Tag,
   Zap,
   Palette,
   Eye,
-  Clock,
   FileText,
   Sparkles,
   Copy,
@@ -26,16 +24,15 @@ export default function MediaDetail() {
   const params = useParams();
   const { user } = useAuth();
   const [file, setFile] = useState<MediaFile | null>(null);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<Array<{
+    id: string;
+    score: number;
+    reason: string;
+    file: MediaFile;
+  }>>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [liked, setLiked] = useState(false);
-
-  useEffect(() => {
-    if (user && params.id) {
-      loadFileDetails();
-    }
-  }, [user, params.id]);
 
   const loadFileDetails = async () => {
     if (!user) return;
@@ -69,6 +66,12 @@ export default function MediaDetail() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user && params.id) {
+      loadFileDetails();
+    }
+  }, [user, params.id]);
 
   const handleCopyLink = async () => {
     try {
@@ -325,7 +328,7 @@ export default function MediaDetail() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-3">
-                    {recommendations.slice(0, 6).map((rec: any) => (
+                    {recommendations.slice(0, 6).map((rec) => (
                       <div 
                         key={rec.id} 
                         className="group cursor-pointer"

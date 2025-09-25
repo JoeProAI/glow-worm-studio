@@ -76,7 +76,7 @@ export default function Gallery() {
   const ConstellationView = () => (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-900">
       <div className="absolute inset-0">
-        {filteredFiles.map((file, index) => {
+        {filteredFiles.map((file) => {
           const x = Math.random() * 80 + 10; // 10-90%
           const y = Math.random() * 80 + 10; // 10-90%
           const size = 120 + (file.aiAnalysis?.confidence || 0.5) * 80; // 120-200px based on confidence
@@ -210,7 +210,6 @@ export default function Gallery() {
   );
 
   const MoodSpectrumView = () => {
-    const colors = getUniqueColors();
     const moods = getUniqueMoods();
     
     return (
