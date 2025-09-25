@@ -2,6 +2,7 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { collection, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { storage, db } from './firebase';
 import { AIAnalysis } from './ai-service';
+import { EnhancedAIAnalysis } from './enhanced-ai-service';
 
 export interface MediaFile {
   id: string;
@@ -15,7 +16,7 @@ export interface MediaFile {
   uploadedAt: Date;
   userId: string;
   tags: string[];
-  aiAnalysis?: AIAnalysis;
+  aiAnalysis?: AIAnalysis | EnhancedAIAnalysis;
   folder?: string;
   isPublic: boolean;
 }
@@ -24,7 +25,7 @@ export class MediaService {
   static async uploadFile(
     file: File, 
     userId: string, 
-    aiAnalysis?: AIAnalysis,
+    aiAnalysis?: AIAnalysis | EnhancedAIAnalysis,
     folder?: string
   ): Promise<MediaFile> {
     if (!storage || !db) {

@@ -47,7 +47,35 @@ STRIPE_WEBHOOK_SECRET=whsec_...your_webhook_secret
 
 ---
 
-## 🤖 **Phase 3: AI Features (For smart categorization)**
+## 🚀 **Phase 3: Daytona SDK (Advanced AI Processing)**
+
+### **What you need to do:**
+1. Go to [Daytona Dashboard](https://app.daytona.io)
+2. Create account and get API key
+3. Enable sandbox processing for large files
+
+### **Variables to add in Vercel:**
+```bash
+# Required for advanced AI processing
+DAYTONA_API_KEY=dtn_your_api_key_here
+DAYTONA_API_URL=https://app.daytona.io/api
+
+# Optional - Performance tuning
+DAYTONA_DEFAULT_TIMEOUT=1800000  # 30 minutes
+DAYTONA_MAX_RETRIES=3
+DAYTONA_ENABLE_SNAPSHOTS=true
+```
+
+**🎯 Enables:** Sandbox processing for large files, video analysis, enterprise-grade AI processing
+
+**⚠️ Important:** 
+- DO NOT use `DAYTONA_ORG_ID` or `DAYTONA_TARGET` - they cause errors
+- Automatically used for files >20MB and all videos
+- Provides isolated, scalable processing environments
+
+---
+
+## 🤖 **Phase 4: AI Features (For smart categorization)**
 
 ### **OpenAI (Image analysis)**
 1. Go to [OpenAI Platform](https://platform.openai.com)
