@@ -300,18 +300,34 @@ export class EnhancedAIService {
     } catch (error: any) {
       console.error('❌ Sandbox video analysis failed:', error);
       
-      // Fallback for video
-      return {
-        description: 'Video analysis failed - using basic metadata',
-        objects: ['video', 'motion'],
-        colors: [],
-        mood: 'dynamic',
-        confidence: 0.3,
-        tags: [videoFile.type.split('/')[1], 'video', 'media'],
-        processingMethod: 'local',
-        processingTime: Date.now() - startTime,
-        complexity
-      };
+      // Fallback to basic AI analysis
+      console.log('🔄 Falling back to basic AI analysis for video...');
+      try {
+        const { analyzeVideo } = await import('./ai-service');
+        const basicAnalysis = await analyzeVideo(videoFile);
+        
+        return {
+          ...basicAnalysis,
+          processingMethod: 'local' as const,
+          processingTime: Date.now() - startTime,
+          complexity
+        };
+      } catch (fallbackError) {
+        console.error('❌ Basic video analysis also failed:', fallbackError);
+        
+        // Ultimate fallback
+        return {
+          description: 'Video analysis failed - using basic metadata',
+          objects: ['video', 'motion'],
+          colors: [],
+          mood: 'dynamic',
+          confidence: 0.3,
+          tags: [videoFile.type.split('/')[1], 'video', 'media'],
+          processingMethod: 'local' as const,
+          processingTime: Date.now() - startTime,
+          complexity
+        };
+      }
     } finally {
       // Cleanup sandbox
       if (sandbox) {

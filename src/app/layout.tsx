@@ -76,9 +76,7 @@ export default function RootLayout({
           </div>
           
           {/* Subtle Gradient Overlay */}
-          <div className="fixed inset-0 pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-cyan-500/5"></div>
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-cyan-500/5"></div>
           
           {/* Main Content */}
           <div className="relative z-10">
