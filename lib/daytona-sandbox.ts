@@ -41,15 +41,22 @@ export class OptimizedDaytonaSandboxManager {
   private static daytona: any = null;
 
   private static initializeDaytona() {
-    if (!this.daytona && process.env.DAYTONA_API_KEY) {
+    // Quick check for API key first
+    if (!process.env.DAYTONA_API_KEY || process.env.DAYTONA_API_KEY.trim() === '') {
+      console.log('🔧 Daytona API key not configured - using local processing');
+      return null;
+    }
+
+    if (!this.daytona) {
       try {
         const { Daytona } = require('@daytonaio/sdk');
         this.daytona = new Daytona({
           apiKey: process.env.DAYTONA_API_KEY,
           apiUrl: process.env.DAYTONA_API_URL || 'https://app.daytona.io/api'
         });
+        console.log('🚀 Daytona SDK initialized successfully');
       } catch (error) {
-        console.warn('Daytona SDK initialization failed:', error);
+        console.log('🔧 Daytona SDK unavailable - using local processing');
         this.daytona = null;
       }
     }
@@ -57,7 +64,11 @@ export class OptimizedDaytonaSandboxManager {
   }
 
   static isDaytonaAvailable(): boolean {
-    return !!process.env.DAYTONA_API_KEY && this.initializeDaytona() !== null;
+    return !!(
+      process.env.DAYTONA_API_KEY && 
+      process.env.DAYTONA_API_KEY.trim() !== '' &&
+      this.initializeDaytona() !== null
+    );
   }
 
   /**

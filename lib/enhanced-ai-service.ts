@@ -50,9 +50,10 @@ export class EnhancedAIService {
    * Determine if sandbox processing is needed
    */
   private static shouldUseSandbox(file: File, complexity: string): boolean {
-    // First check if Daytona is available
+    // First check if Daytona is available - if not, skip sandbox entirely
     if (!OptimizedDaytonaSandboxManager.isDaytonaAvailable()) {
-      return false; // Fall back to local processing if Daytona not available
+      console.log('🔧 Daytona not configured - using local processing for all files');
+      return false;
     }
 
     const sizeInMB = file.size / (1024 * 1024);
@@ -63,7 +64,7 @@ export class EnhancedAIService {
     // - Video files (always)
     // - Enterprise-level processing
     
-    return (
+    const shouldUse = (
       sizeInMB > 20 ||
       complexity === 'complex' ||
       complexity === 'enterprise' ||
@@ -71,6 +72,14 @@ export class EnhancedAIService {
       file.type.includes('pdf') ||
       file.type.includes('document')
     );
+
+    if (shouldUse) {
+      console.log(`🚀 Using sandbox processing for ${file.name} (${sizeInMB.toFixed(1)}MB, ${complexity})`);
+    } else {
+      console.log(`🔧 Using local processing for ${file.name} (${sizeInMB.toFixed(1)}MB, ${complexity})`);
+    }
+
+    return shouldUse;
   }
 
   /**
