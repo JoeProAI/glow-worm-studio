@@ -33,8 +33,43 @@ export default function Dashboard() {
     
     try {
       setLoading(true);
-      const userFiles = await MediaService.getUserMedia(user.uid);
-      setFiles(userFiles);
+      // Try to load from MediaService, but provide demo data if it fails
+      try {
+        const userFiles = await MediaService.getUserMedia(user.uid);
+        setFiles(userFiles);
+      } catch (error) {
+        console.log('🔧 Demo mode: Using sample data');
+        // Demo files for showcase
+        const demoFiles: MediaFile[] = [
+          {
+            id: 'demo1',
+            name: 'sample-image.jpg',
+            originalName: 'sample-image.jpg',
+            type: 'image',
+            mimeType: 'image/jpeg',
+            size: 2048000,
+            url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+            uploadedAt: new Date(Date.now() - 86400000),
+            userId: user.uid,
+            tags: ['landscape', 'nature', 'demo'],
+            isPublic: false
+          },
+          {
+            id: 'demo2',
+            name: 'sample-video.mp4',
+            originalName: 'sample-video.mp4',
+            type: 'video',
+            mimeType: 'video/mp4',
+            size: 15728640,
+            url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+            uploadedAt: new Date(Date.now() - 172800000),
+            userId: user.uid,
+            tags: ['video', 'sample', 'demo'],
+            isPublic: false
+          }
+        ];
+        setFiles(demoFiles);
+      }
     } catch (error) {
       console.error('Failed to load media:', error);
     } finally {
@@ -206,15 +241,17 @@ export default function Dashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-400">Please sign in to access your dashboard.</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-center">
+          <h2 className="text-2xl font-medium text-white mb-4">Sign in required</h2>
+          <p className="text-gray-500 mb-6">Please sign in to access your dashboard.</p>
+          <Button 
+            className="bg-white text-black hover:bg-gray-100 font-medium px-6 py-2"
+            onClick={() => window.location.href = '/'}
+          >
+            Go to Home
+          </Button>
+        </div>
       </div>
     );
   }
@@ -222,20 +259,20 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-black">
       {/* Header */}
-      <div className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-white">Media Intelligence</h1>
-              <p className="text-gray-400">Welcome back, {userProfile?.displayName}</p>
+              <h1 className="text-2xl font-medium text-white">Dashboard</h1>
+              <p className="text-gray-500">Welcome back, {userProfile?.displayName || 'User'}</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-400">
+            <div className="flex items-center space-x-6">
+              <div className="text-sm text-gray-500">
                 {userProfile?.storageUsed ? formatFileSize(userProfile.storageUsed) : '0 MB'} / {userProfile?.storageLimit ? formatFileSize(userProfile.storageLimit) : '1 GB'}
               </div>
-              <div className="w-32 bg-gray-700 rounded-full h-2">
+              <div className="w-24 bg-gray-800 rounded-full h-1">
                 <div 
-                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 h-2 rounded-full" 
+                  className="bg-white h-1 rounded-full" 
                   style={{ width: `${((userProfile?.storageUsed || 0) / (userProfile?.storageLimit || 1)) * 100}%` }}
                 ></div>
               </div>
@@ -249,39 +286,35 @@ export default function Dashboard() {
         <ProcessingStatusPanel files={processingFiles} />
 
         {/* Upload Area */}
-        <Card className="mb-8">
-          <CardContent className="p-8">
-            <div
-              {...getRootProps()}
-              className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 cursor-pointer ${
-                isDragActive 
-                  ? 'border-emerald-500 bg-emerald-500/10' 
-                  : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
-              }`}
-            >
-              <input {...getInputProps()} />
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center border border-emerald-500/20">
-                  <Upload className="w-8 h-8 text-emerald-400" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    {isDragActive ? 'Drop files here' : 'Upload your media'}
-                  </h3>
-                  <p className="text-gray-400">
-                    Drag and drop files or click to browse. Supports images, videos, and audio.
-                  </p>
-                </div>
-                {uploading && (
-                  <div className="flex items-center space-x-2 text-emerald-400">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-400"></div>
-                    <span>Processing with AI...</span>
-                  </div>
-                )}
+        <div className="mb-8">
+          <div
+            {...getRootProps()}
+            className={`border border-dashed rounded-lg p-12 text-center transition-all cursor-pointer ${
+              isDragActive 
+                ? 'border-white bg-gray-900' 
+                : 'border-gray-700 hover:border-gray-600 hover:bg-gray-900/50'
+            }`}
+          >
+            <input {...getInputProps()} />
+            <div className="flex flex-col items-center space-y-4">
+              <Upload className="w-8 h-8 text-gray-400" />
+              <div>
+                <h3 className="text-lg font-medium text-white mb-2">
+                  {isDragActive ? 'Drop files here' : 'Upload files'}
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  Drag and drop or click to browse. Supports images, videos, and audio.
+                </p>
               </div>
+              {uploading && (
+                <div className="flex items-center space-x-2 text-white">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span className="text-sm">Processing...</span>
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Controls */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">

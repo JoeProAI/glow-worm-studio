@@ -53,9 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if Firebase is available
-  const isFirebaseAvailable = !!(auth && db);
-
   // Create or update user profile in Firestore
   const createUserProfile = async (user: User, additionalData?: Record<string, unknown>) => {
     if (!db) return;
