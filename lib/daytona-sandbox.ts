@@ -1,4 +1,4 @@
-import { Daytona } from '@daytonaio/sdk';
+// Daytona SDK imported dynamically to avoid build-time issues
 
 // Configuration interfaces
 export interface OptimizedSandboxConfig {
@@ -38,15 +38,42 @@ export interface ProcessingResult {
 }
 
 export class OptimizedDaytonaSandboxManager {
-  private static daytona = new Daytona({
-    apiKey: process.env.DAYTONA_API_KEY!,
-    apiUrl: process.env.DAYTONA_API_URL || 'https://app.daytona.io/api'
-  });
+  private static daytona: any = null;
+
+  private static initializeDaytona() {
+    if (!this.daytona && process.env.DAYTONA_API_KEY) {
+      try {
+        const { Daytona } = require('@daytonaio/sdk');
+        this.daytona = new Daytona({
+          apiKey: process.env.DAYTONA_API_KEY,
+          apiUrl: process.env.DAYTONA_API_URL || 'https://app.daytona.io/api'
+        });
+      } catch (error) {
+        console.warn('Daytona SDK initialization failed:', error);
+        this.daytona = null;
+      }
+    }
+    return this.daytona;
+  }
+
+  static isDaytonaAvailable(): boolean {
+    return !!process.env.DAYTONA_API_KEY && this.initializeDaytona() !== null;
+  }
 
   /**
    * Create optimized sandbox based on processing requirements
    */
   static async createOptimizedSandbox(config: OptimizedSandboxConfig) {
+    // Check if Daytona is available
+    if (!this.isDaytonaAvailable()) {
+      throw new Error('Daytona SDK not available - missing API key or initialization failed');
+    }
+
+    const daytona = this.initializeDaytona();
+    if (!daytona) {
+      throw new Error('Failed to initialize Daytona SDK');
+    }
+
     const retryAttempts = 3;
     let lastError: Error;
     
@@ -57,7 +84,7 @@ export class OptimizedDaytonaSandboxManager {
         const performanceConfig = this.getPerformanceConfig(config.complexity);
         const snapshotConfig = this.getSnapshotStrategy(config.processingType, attempt > 1);
         
-        const sandbox = await this.daytona.create({
+        const sandbox = await daytona.create({
           language: 'javascript' as const,
           envVars: {
             // File Processing Configuration

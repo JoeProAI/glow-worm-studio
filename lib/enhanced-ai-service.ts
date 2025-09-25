@@ -50,6 +50,11 @@ export class EnhancedAIService {
    * Determine if sandbox processing is needed
    */
   private static shouldUseSandbox(file: File, complexity: string): boolean {
+    // First check if Daytona is available
+    if (!OptimizedDaytonaSandboxManager.isDaytonaAvailable()) {
+      return false; // Fall back to local processing if Daytona not available
+    }
+
     const sizeInMB = file.size / (1024 * 1024);
     
     // Use sandbox for:

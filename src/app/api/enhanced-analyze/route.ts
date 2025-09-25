@@ -20,25 +20,43 @@ export async function POST(request: NextRequest) {
 
     let analysis;
 
-    // Route to appropriate enhanced analysis method
-    if (file.type.startsWith('image/')) {
-      analysis = await EnhancedAIService.analyzeImage(file, userId);
-    } else if (file.type.startsWith('video/')) {
-      analysis = await EnhancedAIService.analyzeVideo(file, userId);
-    } else if (file.type.startsWith('audio/')) {
-      analysis = await EnhancedAIService.analyzeAudio(file, userId);
-    } else {
-      // Fallback for unsupported file types
+    try {
+      // Route to appropriate enhanced analysis method
+      if (file.type.startsWith('image/')) {
+        analysis = await EnhancedAIService.analyzeImage(file, userId);
+      } else if (file.type.startsWith('video/')) {
+        analysis = await EnhancedAIService.analyzeVideo(file, userId);
+      } else if (file.type.startsWith('audio/')) {
+        analysis = await EnhancedAIService.analyzeAudio(file, userId);
+      } else {
+        // Fallback for unsupported file types
+        analysis = {
+          description: `File: ${file.name} (${file.type})`,
+          objects: ['document', 'file'],
+          colors: [],
+          mood: 'neutral',
+          confidence: 0.3,
+          tags: [file.type.split('/')[1] || 'unknown', 'document'],
+          processingMethod: 'local' as const,
+          processingTime: 100,
+          complexity: 'simple' as const
+        };
+      }
+    } catch (analysisError: any) {
+      console.error('Enhanced analysis failed:', analysisError);
+      
+      // Return fallback analysis if enhanced processing fails
       analysis = {
-        description: `File: ${file.name} (${file.type})`,
-        objects: ['document', 'file'],
+        description: `File: ${file.name} (enhanced analysis failed)`,
+        objects: [file.type.split('/')[0] || 'file'],
         colors: [],
         mood: 'neutral',
-        confidence: 0.3,
-        tags: [file.type.split('/')[1] || 'unknown', 'document'],
+        confidence: 0.2,
+        tags: [file.type.split('/')[1] || 'unknown', 'fallback'],
         processingMethod: 'local' as const,
-        processingTime: 100,
-        complexity: 'simple' as const
+        processingTime: 50,
+        complexity: 'simple' as const,
+        error: analysisError.message
       };
     }
 
