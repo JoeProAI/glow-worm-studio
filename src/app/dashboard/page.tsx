@@ -10,6 +10,7 @@ import { Input } from "../../../components/ui/input";
 import { MediaService, MediaFile } from "../../../lib/media-service";
 import { AIAnalysis } from "../../../lib/ai-service";
 import { ProcessingStatusPanel, useProcessingStatus } from "../../../components/processing-status";
+import { localStorageService } from "../../../lib/local-storage-service";
 
 export default function Dashboard() {
   const { user, userProfile } = useAuth();
@@ -33,45 +34,14 @@ export default function Dashboard() {
     
     try {
       setLoading(true);
-      // Try to load from MediaService, but provide demo data if it fails
-      try {
-        const userFiles = await MediaService.getUserMedia(user.uid);
-        setFiles(userFiles);
-      } catch (error) {
-        console.log('🔧 Demo mode: Using sample data');
-        // Demo files for showcase
-        const demoFiles: MediaFile[] = [
-          {
-            id: 'demo1',
-            name: 'sample-image.jpg',
-            originalName: 'sample-image.jpg',
-            type: 'image',
-            mimeType: 'image/jpeg',
-            size: 2048000,
-            url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
-            uploadedAt: new Date(Date.now() - 86400000),
-            userId: user.uid,
-            tags: ['landscape', 'nature', 'demo'],
-            isPublic: false
-          },
-          {
-            id: 'demo2',
-            name: 'sample-video.mp4',
-            originalName: 'sample-video.mp4',
-            type: 'video',
-            mimeType: 'video/mp4',
-            size: 15728640,
-            url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-            uploadedAt: new Date(Date.now() - 172800000),
-            userId: user.uid,
-            tags: ['video', 'sample', 'demo'],
-            isPublic: false
-          }
-        ];
-        setFiles(demoFiles);
-      }
+      // Load from local storage service
+      const storedFiles = await localStorageService.getUserFiles(user.uid);
+      const mediaFiles = storedFiles.map(file => localStorageService.toMediaFile(file));
+      setFiles(mediaFiles);
+      console.log(`📁 Loaded ${mediaFiles.length} files from local storage`);
     } catch (error) {
       console.error('Failed to load media:', error);
+      setFiles([]); // Start with empty array if loading fails
     } finally {
       setLoading(false);
     }
@@ -96,32 +66,15 @@ export default function Dashboard() {
             progress: 30 
           });
           
-          // SIMPLE LOCAL PROCESSING - No external services needed
-          const fileUrl = URL.createObjectURL(file);
-          
-          // Simulate quick processing
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Store file in local storage service
+          const storedFile = await localStorageService.uploadFile(file, user.uid);
           
           updateFile(file.name, { 
             progress: 70 
           });
           
-          // Create simple media file
-          const mediaFile: MediaFile = {
-            id: Date.now().toString() + Math.random().toString(36),
-            name: file.name,
-            originalName: file.name,
-            type: file.type.startsWith('image/') ? 'image' : 
-                  file.type.startsWith('video/') ? 'video' : 
-                  file.type.startsWith('audio/') ? 'audio' : 'document',
-            mimeType: file.type,
-            size: file.size,
-            url: fileUrl,
-            uploadedAt: new Date(),
-            userId: user.uid,
-            tags: [file.type.split('/')[1] || 'file', 'uploaded', 'local'],
-            isPublic: false
-          };
+          // Convert to MediaFile format
+          const mediaFile = localStorageService.toMediaFile(storedFile);
           
           // Update status to completed
           updateFile(file.name, { 
@@ -134,6 +87,8 @@ export default function Dashboard() {
           
           // Remove from processing after a delay
           setTimeout(() => removeFile(file.name), 2000);
+          
+          console.log(`✅ File stored successfully: ${file.name}`);
           
         } catch (fileError) {
           console.error(`Failed to process ${file.name}:`, fileError);
@@ -149,7 +104,17 @@ export default function Dashboard() {
     } finally {
       setUploading(false);
     }
-  }, [user]);
+  }, [user, loadUserMedia]);
+
+  const deleteFile = async (fileId: string) => {
+    try {
+      await localStorageService.deleteFile(fileId);
+      setFiles(prev => prev.filter(f => f.id !== fileId));
+      console.log(`🗑️ File deleted: ${fileId}`);
+    } catch (error) {
+      console.error('Failed to delete file:', error);
+    }
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
