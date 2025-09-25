@@ -33,7 +33,11 @@ export default function Home() {
                 <>
                   {user ? (
                     <>
-                      <Button variant="ghost" className="text-gray-300 hover:text-white">
+                      <Button 
+                        variant="ghost" 
+                        className="text-gray-300 hover:text-white"
+                        onClick={() => window.location.href = '/dashboard'}
+                      >
                         Dashboard
                       </Button>
                       <div className="flex items-center space-x-3">
@@ -115,11 +119,20 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-20">
             {user ? (
               <>
-                <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white text-lg px-10 py-4">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white text-lg px-10 py-4"
+                  onClick={() => window.location.href = '/dashboard'}
+                >
                   <Upload className="w-5 h-5 mr-2" />
                   Upload Media
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-10 py-4 border-gray-700 text-gray-300 hover:bg-gray-900 hover:border-gray-600">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="text-lg px-10 py-4 border-gray-700 text-gray-300 hover:bg-gray-900 hover:border-gray-600"
+                  onClick={() => window.location.href = '/dashboard'}
+                >
                   <Grid3X3 className="w-5 h-5 mr-2" />
                   My Galleries
                 </Button>
