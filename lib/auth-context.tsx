@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Create or update user profile in Firestore
   const createUserProfile = async (user: User, additionalData?: Record<string, unknown>) => {
+    if (!db) return;
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
 
@@ -87,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
+    if (!auth) throw new Error('Firebase not initialized');
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -98,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign up with email and password
   const signUp = async (email: string, password: string, displayName: string) => {
+    if (!auth) throw new Error('Firebase not initialized');
     setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
@@ -111,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with Google
   const signInWithGoogle = async () => {
+    if (!auth) throw new Error('Firebase not initialized');
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -123,6 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with GitHub
   const signInWithGithub = async () => {
+    if (!auth) throw new Error('Firebase not initialized');
     setLoading(true);
     try {
       const provider = new GithubAuthProvider();
@@ -135,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign out
   const logout = async () => {
+    if (!auth) throw new Error('Firebase not initialized');
     try {
       await signOut(auth);
       setUser(null);
@@ -146,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Update user profile
   const updateUserProfile = async (data: Partial<UserProfile>) => {
-    if (!user) return;
+    if (!user || !db) return;
     
     try {
       const userRef = doc(db, 'users', user.uid);
@@ -162,6 +168,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for auth state changes
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUser(user);
