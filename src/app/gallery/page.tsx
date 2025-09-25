@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import { useAuth } from "../../../lib/auth-context";
@@ -9,14 +9,12 @@ import {
   Sparkles, 
   Palette, 
   Clock, 
-  Network, 
   Grid3X3, 
   Zap,
   Eye,
   Heart,
   Share2,
   Download,
-  Filter,
   Search
 } from "lucide-react";
 import { Input } from "../../../components/ui/input";
@@ -31,13 +29,7 @@ export default function Gallery() {
   const [selectedMood, setSelectedMood] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    if (user) {
-      loadUserMedia();
-    }
-  }, [user]);
-
-  const loadUserMedia = async () => {
+  const loadUserMedia = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -48,7 +40,13 @@ export default function Gallery() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadUserMedia();
+    }
+  }, [user, loadUserMedia]);
 
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -57,13 +55,6 @@ export default function Gallery() {
     return matchesSearch && matchesMood;
   });
 
-  const getUniqueColors = () => {
-    const colors = new Set<string>();
-    files.forEach(file => {
-      file.aiAnalysis?.colors.forEach(color => colors.add(color));
-    });
-    return Array.from(colors);
-  };
 
   const getUniqueMoods = () => {
     const moods = new Set<string>();
@@ -127,7 +118,7 @@ export default function Gallery() {
       {/* Connecting lines between related images */}
       <svg className="absolute inset-0 pointer-events-none opacity-20">
         {filteredFiles.slice(0, 10).map((file, i) => 
-          filteredFiles.slice(i + 1, i + 3).map((otherFile, j) => (
+          filteredFiles.slice(i + 1, i + 3).map((otherFile) => (
             <line
               key={`${file.id}-${otherFile.id}`}
               x1={`${Math.random() * 80 + 10}%`}
@@ -156,7 +147,7 @@ export default function Gallery() {
         {/* Timeline line */}
         <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 to-cyan-500"></div>
         
-        {filteredFiles.map((file, index) => (
+        {filteredFiles.map((file) => (
           <div key={file.id} className="relative flex items-center mb-12">
             {/* Timeline dot */}
             <div className="absolute left-6 w-4 h-4 bg-emerald-500 rounded-full border-4 border-black z-10"></div>

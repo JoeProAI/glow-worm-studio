@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from "../../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
@@ -34,7 +34,7 @@ export default function MediaDetail() {
   const [copied, setCopied] = useState(false);
   const [liked, setLiked] = useState(false);
 
-  const loadFileDetails = async () => {
+  const loadFileDetails = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -65,13 +65,13 @@ export default function MediaDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, params.id]);
 
   useEffect(() => {
     if (user && params.id) {
       loadFileDetails();
     }
-  }, [user, params.id]);
+  }, [user, params.id, loadFileDetails]);
 
   const handleCopyLink = async () => {
     try {
