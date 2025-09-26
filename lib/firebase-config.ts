@@ -70,11 +70,14 @@ export const isFirebaseConfigured = () => {
 
 // Log configuration status
 if (typeof window !== 'undefined') {
-  if (isFirebaseConfigured()) {
+  if (isConfigured && auth && db && storage) {
     console.log('🔥 Firebase configured successfully');
+    console.log('📊 Services initialized:', { auth: !!auth, db: !!db, storage: !!storage });
   } else {
-    console.log('⚠️ Firebase not configured - some features may not work');
-    console.log('Add Firebase environment variables to enable full functionality');
+    console.log('⚠️ Firebase not configured - running in demo mode');
+    if (!isConfigured) {
+      console.log('Missing environment variables. Add Firebase config to enable full functionality.');
+    }
   }
 }
 
