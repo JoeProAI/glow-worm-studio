@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminStorage, adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { adminStorage, adminDb, isFirebaseAdminConfigured } from '../../../../lib/firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
