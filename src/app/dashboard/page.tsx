@@ -4,13 +4,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
-import { useAuth } from "../../../lib/auth-context";
 import { Upload, Image as ImageIcon, Video, File, Zap, Grid3X3, List, Search, Filter, Plus, Trash2, Tag } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { MediaService, MediaFile } from "../../../lib/media-service";
 import { AIAnalysis } from "../../../lib/ai-service";
 import { ProcessingStatusPanel, useProcessingStatus } from "../../../components/processing-status";
-import { isFirebaseConfigured } from "../../../lib/firebase-config";
 
 export default function Dashboard() {
   const { user, userProfile } = useAuth();
