@@ -4,13 +4,26 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔍 Upload API called');
+    console.log('🔍 Checking Firebase Admin configuration...');
+    
+    // Debug Firebase Admin state
+    console.log('🔍 Firebase Admin services:', {
+      adminStorage: !!adminStorage,
+      adminDb: !!adminDb,
+      isConfigured: isFirebaseAdminConfigured()
+    });
+    
     // Check if Firebase Admin is configured
     if (!isFirebaseAdminConfigured()) {
+      console.error('❌ Firebase Admin not configured');
       return NextResponse.json(
-        { error: 'Firebase Admin not configured' },
+        { error: 'Firebase Admin not configured - check server logs' },
         { status: 500 }
       );
     }
+    
+    console.log('✅ Firebase Admin is configured');
 
     // Get the uploaded file from form data
     const formData = await request.formData();
