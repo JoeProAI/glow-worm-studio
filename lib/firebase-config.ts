@@ -28,26 +28,29 @@ const hasValidConfig = firebaseConfig.apiKey !== 'your_api_key_here' &&
 
 const isConfigured = hasRequiredConfig && hasValidConfig;
 
-// Initialize Firebase only if properly configured
+// Initialize Firebase only if properly configured AND in browser
 let app: any = null;
 let auth: any = null;
 let db: any = null;
 let storage: any = null;
 
-if (isConfigured) {
+// Only initialize in browser and when properly configured
+if (typeof window !== 'undefined' && isConfigured) {
   try {
     if (getApps().length === 0) {
       app = initializeApp(firebaseConfig);
+      console.log('🔥 Firebase app initialized');
     } else {
       app = getApps()[0];
+      console.log('🔥 Using existing Firebase app');
     }
 
-    // Initialize services
+    // Initialize services lazily
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
     
-    console.log('🔥 Firebase initialized successfully');
+    console.log('🔥 Firebase services initialized successfully');
   } catch (error) {
     console.error('Firebase initialization failed:', error);
     // Reset to null on error
@@ -56,7 +59,7 @@ if (isConfigured) {
     db = null;
     storage = null;
   }
-} else {
+} else if (typeof window !== 'undefined') {
   console.log('⚠️ Firebase not configured - running in demo mode');
 }
 

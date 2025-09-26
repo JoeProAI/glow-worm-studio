@@ -87,7 +87,7 @@ export default function Dashboard() {
             progress: 20 
           });
           
-          if (isFirebaseConfigured()) {
+          if (isFirebaseConfigured() && user) {
             // Upload to Firebase Storage
             updateFile(file.name, { 
               status: 'uploading', 
@@ -163,8 +163,8 @@ export default function Dashboard() {
 
   const deleteFile = async (fileId: string) => {
     try {
-      if (isFirebaseConfigured()) {
-        await MediaService.deleteFile(fileId);
+      if (isFirebaseConfigured() && user) {
+        await MediaService.deleteFile(fileId, user.uid);
         console.log(`🔥 File deleted from Firebase: ${fileId}`);
       } else {
         console.log(`⚠️ Demo mode: File removed from view: ${fileId}`);
