@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminStorage, adminDb, adminAuth, isFirebaseAdminConfigured } from '../../../../lib/firebase-admin';
+import { adminStorage, adminDb, adminAuth, isFirebaseAdminConfigured } from '../../../../lib/firebase-admin-clean';
 
 export async function GET(request: NextRequest) {
   console.log('🧪 Testing Firebase Admin configuration...');

@@ -4,8 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Upload, Image as ImageIcon, Video, File, Zap, Grid3X3, List, Search, Filter, Plus, Trash2, Tag } from "lucide-react";
-import { Input } from "../../../components/ui/input";
+import { Upload, Image as ImageIcon, Video, File, Sparkles, Play, Download, Trash2 } from "lucide-react";
 import { MediaService, MediaFile } from "../../../lib/media-service";
 
 // Simple mock user for demo
@@ -16,166 +15,38 @@ const mockUser = {
 };
 
 export default function Dashboard() {
-  const user = mockUser; // Use mock user for now
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'images' | 'videos' | 'documents'>('all');
-
-  // Load user's media files
-  useEffect(() => {
-    if (user) {
-      loadUserMedia();
-    }
-  }, [user]);
-
-  const loadUserMedia = async () => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
-      
-      if (isFirebaseConfigured()) {
-        // Load from Firebase Storage
-        const userFiles = await MediaService.getUserMedia(user.uid);
-        setFiles(userFiles);
-        console.log(`🔥 Loaded ${userFiles.length} files from Firebase`);
-      } else {
-        // Demo mode with sample data
-        console.log('⚠️ Firebase not configured - showing demo data');
-        const demoFiles: MediaFile[] = [
-          {
-            id: 'demo1',
-            name: 'sample-image.jpg',
-            originalName: 'sample-image.jpg',
-            type: 'image',
-            mimeType: 'image/jpeg',
-            size: 2048000,
-            url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
-            uploadedAt: new Date(Date.now() - 86400000),
-            userId: user.uid,
-            tags: ['landscape', 'nature', 'demo'],
-            isPublic: false
-          }
-        ];
-        setFiles(demoFiles);
-      }
-    } catch (error) {
-      console.error('Failed to load media:', error);
-      setFiles([]); // Start with empty array if loading fails
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [uploadStatus, setUploadStatus] = useState<string>('');
+  const [generatingVideo, setGeneratingVideo] = useState(false);
+  const [videoPrompt, setVideoPrompt] = useState('');
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (!user) return;
-    
     setUploading(true);
     
     try {
       for (const file of acceptedFiles) {
-        // Add file to processing status
-        addFile(file.name, file.size);
+        setUploadStatus(`Processing ${file.name}...`);
+        console.log(`⚡ Processing ${file.name}`);
         
         try {
-          console.log(`⚡ Processing ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
-          
-          // Update status to analyzing
-          updateFile(file.name, { 
-            status: 'analyzing', 
-            progress: 20 
-          });
-          
-          if (isFirebaseConfigured() && user) {
-            // Upload to Firebase Storage
-            updateFile(file.name, { 
-              status: 'uploading', 
-              progress: 40 
-            });
-            
-            const uploadedFile = await MediaService.uploadFile(file, user.uid);
-            
-            // Update status to completed
-            updateFile(file.name, { 
-              status: 'completed', 
-              progress: 100 
-            });
-            
-            // Add to files list
-            setFiles(prev => [uploadedFile, ...prev]);
-            
-            console.log(`🔥 File uploaded to Firebase: ${file.name}`);
-          } else {
-            // Demo mode - create temporary file object
-            const fileUrl = URL.createObjectURL(file);
-            
-            updateFile(file.name, { 
-              progress: 70 
-            });
-            
-            const demoFile: MediaFile = {
-              id: Date.now().toString() + Math.random().toString(36),
-              name: file.name,
-              originalName: file.name,
-              type: file.type.startsWith('image/') ? 'image' : 
-                    file.type.startsWith('video/') ? 'video' : 
-                    file.type.startsWith('audio/') ? 'audio' : 'document',
-              mimeType: file.type,
-              size: file.size,
-              url: fileUrl,
-              uploadedAt: new Date(),
-              userId: user.uid,
-              tags: [file.type.split('/')[1] || 'file', 'demo'],
-              isPublic: false
-            };
-            
-            // Update status to completed
-            updateFile(file.name, { 
-              status: 'completed', 
-              progress: 100 
-            });
-            
-            // Add to files list
-            setFiles(prev => [demoFile, ...prev]);
-            
-            console.log(`⚠️ Demo mode: File preview created for ${file.name}`);
-          }
-          
-          // Remove from processing after a delay
-          setTimeout(() => removeFile(file.name), 2000);
-          
+          const uploadedFile = await MediaService.uploadFile(file, mockUser.uid);
+          setFiles(prev => [uploadedFile, ...prev]);
+          setUploadStatus(`✅ ${file.name} uploaded successfully`);
+          console.log(`🔥 File uploaded: ${file.name}`);
         } catch (fileError) {
+          setUploadStatus(`❌ Failed to upload ${file.name}: ${fileError}`);
           console.error(`Failed to process ${file.name}:`, fileError);
-          updateFile(file.name, { 
-            status: 'error', 
-            error: fileError instanceof Error ? fileError.message : 'Upload failed',
-            progress: 0 
-          });
         }
       }
     } catch (error) {
+      setUploadStatus(`❌ Upload failed: ${error}`);
       console.error('Upload failed:', error);
     } finally {
       setUploading(false);
+      setTimeout(() => setUploadStatus(''), 3000);
     }
-  }, [user, loadUserMedia]);
-
-  const deleteFile = async (fileId: string) => {
-    try {
-      if (isFirebaseConfigured() && user) {
-        await MediaService.deleteFile(fileId, user.uid);
-        console.log(`🔥 File deleted from Firebase: ${fileId}`);
-      } else {
-        console.log(`⚠️ Demo mode: File removed from view: ${fileId}`);
-      }
-      setFiles(prev => prev.filter(f => f.id !== fileId));
-    } catch (error) {
-      console.error('Failed to delete file:', error);
-    }
-  };
+  }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -184,17 +55,6 @@ export default function Dashboard() {
       'video/*': ['.mp4', '.mov', '.avi', '.mkv'],
       'audio/*': ['.mp3', '.wav', '.aac']
     }
-  });
-
-  const filteredFiles = files.filter(file => {
-    const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         file.originalName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         file.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesFilter = selectedFilter === 'all' || 
-                         (selectedFilter === 'images' && file.type === 'image') ||
-                         (selectedFilter === 'videos' && file.type === 'video') ||
-                         (selectedFilter === 'documents' && file.type === 'document');
-    return matchesSearch && matchesFilter;
   });
 
   const formatFileSize = (bytes: number) => {
@@ -206,257 +66,127 @@ export default function Dashboard() {
   };
 
   const getFileIcon = (type: string) => {
-    switch (type) {
-      case 'image': return <ImageIcon className="w-5 h-5" />;
-      case 'video': return <Video className="w-5 h-5" />;
-      default: return <File className="w-5 h-5" />;
-    }
+    if (type.startsWith('image/')) return <ImageIcon className="w-5 h-5" />;
+    if (type.startsWith('video/')) return <Video className="w-5 h-5" />;
+    return <File className="w-5 h-5" />;
   };
-
-  const handleDeleteFile = async (fileId: string) => {
-    if (!user) return;
-    
-    try {
-      await MediaService.deleteFile(fileId, user.uid);
-      setFiles(prev => prev.filter(f => f.id !== fileId));
-    } catch (error) {
-      console.error('Delete failed:', error);
-    }
-  };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <h2 className="text-2xl font-medium text-white mb-4">Sign in required</h2>
-          <p className="text-gray-500 mb-6">Please sign in to access your dashboard.</p>
-          <Button 
-            className="bg-white text-black hover:bg-gray-100 font-medium px-6 py-2"
-            onClick={() => window.location.href = '/'}
-          >
-            Go to Home
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Header */}
-      <div className="border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-medium text-white">Dashboard</h1>
-              <p className="text-gray-500">Welcome back, {userProfile?.displayName || 'User'}</p>
-            </div>
-            <div className="flex items-center space-x-6">
-              <div className="text-sm text-gray-500">
-                {userProfile?.storageUsed ? formatFileSize(userProfile.storageUsed) : '0 MB'} / {userProfile?.storageLimit ? formatFileSize(userProfile.storageLimit) : '1 GB'}
-              </div>
-              <div className="w-24 bg-gray-800 rounded-full h-1">
-                <div 
-                  className="bg-white h-1 rounded-full" 
-                  style={{ width: `${((userProfile?.storageUsed || 0) / (userProfile?.storageLimit || 1)) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">
+            Glow Studio
+          </h1>
+          <p className="text-slate-300">
+            Professional Media Management Platform
+          </p>
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Processing Status */}
-        <ProcessingStatusPanel files={processingFiles} />
 
         {/* Upload Area */}
-        <div className="mb-8">
-          <div
-            {...getRootProps()}
-            className={`border border-dashed rounded-lg p-12 text-center transition-all cursor-pointer ${
-              isDragActive 
-                ? 'border-white bg-gray-900' 
-                : 'border-gray-700 hover:border-gray-600 hover:bg-gray-900/50'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <div className="flex flex-col items-center space-y-4">
-              <Upload className="w-8 h-8 text-gray-400" />
-              <div>
-                <h3 className="text-lg font-medium text-white mb-2">
-                  {isDragActive ? 'Drop files here' : 'Upload files'}
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  Drag and drop or click to browse. Supports images, videos, and audio.
-                </p>
-              </div>
-              {uploading && (
-                <div className="flex items-center space-x-2 text-white">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span className="text-sm">Processing...</span>
+        <Card className="mb-8 border-emerald-500/20 bg-black/20 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Upload className="w-5 h-5" />
+              Upload Media
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-300 ${
+                isDragActive
+                  ? 'border-emerald-400 bg-emerald-400/10'
+                  : 'border-gray-600 hover:border-emerald-500/50 hover:bg-emerald-500/5'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              {isDragActive ? (
+                <p className="text-emerald-400 text-lg">Drop files here...</p>
+              ) : (
+                <div>
+                  <p className="text-white text-lg mb-2">
+                    Drag & drop files here, or click to select
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Supports images, videos, and audio files
+                  </p>
                 </div>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Search by filename or tags..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={selectedFilter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedFilter('all')}
-            >
-              All
-            </Button>
-            <Button
-              variant={selectedFilter === 'images' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedFilter('images')}
-            >
-              Images
-            </Button>
-            <Button
-              variant={selectedFilter === 'videos' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedFilter('videos')}
-            >
-              Videos
-            </Button>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-            >
-              <Grid3X3 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Media Grid */}
-        {viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredFiles.map((file) => (
-              <Card 
-                key={file.id} 
-                className="group hover:border-emerald-500/50 transition-all duration-300 overflow-hidden cursor-pointer"
-                onClick={() => window.location.href = `/media/${file.id}`}
-              >
-                <div className="aspect-video bg-gray-800 relative overflow-hidden">
-                  <img 
-                    src={file.thumbnailUrl || file.url} 
-                    alt={file.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-2 left-2">
-                    <div className="bg-black/50 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center space-x-1">
-                      {getFileIcon(file.type)}
-                      <span className="text-xs text-white">{file.type.toUpperCase()}</span>
-                    </div>
-                  </div>
-                  {file.aiAnalysis && (
-                    <div className="absolute top-2 right-2">
-                      <div className="bg-emerald-500/20 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center space-x-1">
-                        <Zap className="w-3 h-3 text-emerald-400" />
-                        <span className="text-xs text-emerald-400">{Math.round(file.aiAnalysis.confidence * 100)}%</span>
-                      </div>
-                    </div>
-                  )}
+            
+            {(uploading || uploadStatus) && (
+              <div className="mt-4 text-center">
+                <div className="inline-flex items-center gap-2 text-emerald-400">
+                  {uploading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-400"></div>}
+                  <span>{uploadStatus || 'Uploading files...'}</span>
                 </div>
-                <CardContent className="p-4">
-                  <h3 className="font-medium text-white mb-2 truncate">{file.name}</h3>
-                  <p className="text-sm text-gray-400 mb-3 line-clamp-2">{file.aiAnalysis?.description}</p>
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {file.tags.slice(0, 3).map((tag) => (
-                      <span key={tag} className="px-2 py-1 bg-gray-800 text-xs text-gray-300 rounded-md">
-                        {tag}
-                      </span>
-                    ))}
-                    {file.tags.length > 3 && (
-                      <span className="px-2 py-1 bg-gray-800 text-xs text-gray-300 rounded-md">
-                        +{file.tags.length - 3}
-                      </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Files Grid */}
+        {files.length > 0 && (
+          <Card className="border-emerald-500/20 bg-black/20 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white">
+                Your Files ({files.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {files.map((file) => (
+                  <div
+                    key={file.id}
+                    className="border border-gray-700 rounded-lg p-4 bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      {getFileIcon(file.type)}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium truncate">
+                          {file.name}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          {formatFileSize(file.size)}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {file.type.startsWith('image/') && (
+                      <img
+                        src={file.url}
+                        alt={file.name}
+                        className="w-full h-32 object-cover rounded-md"
+                      />
                     )}
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{formatFileSize(file.size)}</span>
-                    <span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredFiles.map((file) => (
-              <Card key={file.id} className="hover:border-emerald-500/50 transition-all duration-300">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
-                      <img src={file.thumbnailUrl || file.url} alt={file.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        {getFileIcon(file.type)}
-                        <h3 className="font-medium text-white truncate">{file.name}</h3>
-                        {file.aiAnalysis && (
-                          <div className="bg-emerald-500/20 rounded px-2 py-1 flex items-center space-x-1">
-                            <Zap className="w-3 h-3 text-emerald-400" />
-                            <span className="text-xs text-emerald-400">{Math.round(file.aiAnalysis.confidence * 100)}%</span>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-400 mb-2">{file.aiAnalysis?.description}</p>
-                      <div className="flex flex-wrap gap-1">
-                        {file.tags.map((tag) => (
-                          <span key={tag} className="px-2 py-1 bg-gray-800 text-xs text-gray-300 rounded-md">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="text-right text-sm text-gray-500">
-                      <div>{formatFileSize(file.size)}</div>
-                      <div>{new Date(file.uploadedAt).toLocaleDateString()}</div>
+                    
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
+                        onClick={() => window.open(file.url, '_blank')}
+                      >
+                        View
+                      </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-        {filteredFiles.length === 0 && (
+        {files.length === 0 && !uploading && (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-800 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <ImageIcon className="w-8 h-8 text-gray-400" />
+            <div className="text-gray-400 mb-4">
+              <Upload className="w-16 h-16 mx-auto mb-4 opacity-50" />
+              <p className="text-xl">No files uploaded yet</p>
+              <p className="text-sm">Upload your first file to get started</p>
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">No media found</h3>
-            <p className="text-gray-400">Upload some files to get started with AI-powered organization.</p>
           </div>
         )}
       </div>

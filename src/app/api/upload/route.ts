@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminStorage, adminDb, isFirebaseAdminConfigured } from '../../../../lib/firebase-admin';
+import { adminStorage, adminDb, isFirebaseAdminConfigured } from '../../../../lib/firebase-admin-clean';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('🔍 Upload API called');
-    console.log('🔍 Checking Firebase Admin configuration...');
     
     // Debug Firebase Admin state
     console.log('🔍 Firebase Admin services:', {

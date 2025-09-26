@@ -1,23 +1,48 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Upload, Image as ImageIcon, Video, File } from "lucide-react";
+import { Input } from "../../../components/ui/input";
+import { Upload, Image as ImageIcon, Video, File, Sparkles, Play, Download, Trash2, Loader2 } from "lucide-react";
 import { MediaService, MediaFile } from "../../../lib/media-service";
 
-// Simple mock user for demo
 const mockUser = {
   uid: 'demo-user-123',
   email: 'demo@example.com',
   displayName: 'Demo User'
 };
 
+interface GeneratedVideo {
+  id: string;
+  prompt: string;
+  status: string;
+  videoUrl?: string;
+  thumbnailUrl?: string;
+}
+
 export default function Dashboard() {
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>('');
+  const [generatingVideo, setGeneratingVideo] = useState(false);
+  const [videoPrompt, setVideoPrompt] = useState('');
+  const [generatedVideos, setGeneratedVideos] = useState<GeneratedVideo[]>([]);
+
+  // Load files on mount
+  useEffect(() => {
+    loadFiles();
+  }, []);
+
+  const loadFiles = async () => {
+    try {
+      const userFiles = await MediaService.getFiles(mockUser.uid);
+      setFiles(userFiles);
+    } catch (error) {
+      console.error('Failed to load files:', error);
+    }
+  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     setUploading(true);
@@ -25,13 +50,11 @@ export default function Dashboard() {
     try {
       for (const file of acceptedFiles) {
         setUploadStatus(`Processing ${file.name}...`);
-        console.log(`⚡ Processing ${file.name}`);
         
         try {
           const uploadedFile = await MediaService.uploadFile(file, mockUser.uid);
           setFiles(prev => [uploadedFile, ...prev]);
           setUploadStatus(`✅ ${file.name} uploaded successfully`);
-          console.log(`🔥 File uploaded: ${file.name}`);
         } catch (fileError) {
           setUploadStatus(`❌ Failed to upload ${file.name}: ${fileError}`);
           console.error(`Failed to process ${file.name}:`, fileError);
@@ -55,6 +78,81 @@ export default function Dashboard() {
     }
   });
 
+  const generateVideo = async () => {
+    if (!videoPrompt.trim()) return;
+    
+    setGeneratingVideo(true);
+    try {
+      const response = await fetch('/api/generate-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: videoPrompt })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        const newVideo: GeneratedVideo = {
+          id: result.generationId,
+          prompt: videoPrompt,
+          status: result.status
+        };
+        
+        setGeneratedVideos(prev => [newVideo, ...prev]);
+        setVideoPrompt('');
+        
+        // Start polling for completion
+        pollVideoStatus(result.generationId);
+      } else {
+        alert('Failed to generate video: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Video generation failed:', error);
+      alert('Video generation failed');
+    } finally {
+      setGeneratingVideo(false);
+    }
+  };
+
+  const pollVideoStatus = async (generationId: string) => {
+    const poll = async () => {
+      try {
+        const response = await fetch(`/api/check-video?id=${generationId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          setGeneratedVideos(prev => 
+            prev.map(video => 
+              video.id === generationId 
+                ? { ...video, status: result.status, videoUrl: result.videoUrl, thumbnailUrl: result.thumbnailUrl }
+                : video
+            )
+          );
+          
+          if (result.status === 'completed' || result.status === 'failed') {
+            return; // Stop polling
+          }
+        }
+        
+        // Continue polling if not complete
+        setTimeout(poll, 5000);
+      } catch (error) {
+        console.error('Failed to check video status:', error);
+      }
+    };
+    
+    poll();
+  };
+
+  const deleteFile = async (fileId: string) => {
+    try {
+      await MediaService.deleteFile(fileId, mockUser.uid);
+      setFiles(prev => prev.filter(f => f.id !== fileId));
+    } catch (error) {
+      console.error('Failed to delete file:', error);
+    }
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -75,14 +173,130 @@ export default function Dashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            Glow Studio
+            🎬 Glow Studio Pro
           </h1>
           <p className="text-slate-300">
-            Professional Media Management Platform
+            AI-Powered Media Creation & Management Platform
           </p>
         </div>
 
-        {/* Upload Area */}
+        {/* AI Video Generation */}
+        <Card className="mb-8 border-purple-500/20 bg-black/20 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+              AI Video Generation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <Input
+                value={videoPrompt}
+                onChange={(e) => setVideoPrompt(e.target.value)}
+                placeholder="Describe the video you want to create..."
+                className="flex-1 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400"
+                disabled={generatingVideo}
+              />
+              <Button
+                onClick={generateVideo}
+                disabled={generatingVideo || !videoPrompt.trim()}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {generatingVideo ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate Video
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Generated Videos */}
+        {generatedVideos.length > 0 && (
+          <Card className="mb-8 border-purple-500/20 bg-black/20 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white">Generated Videos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {generatedVideos.map((video) => (
+                  <div
+                    key={video.id}
+                    className="border border-gray-700 rounded-lg p-4 bg-gray-800/50"
+                  >
+                    <div className="mb-3">
+                      <p className="text-white font-medium text-sm mb-1">
+                        {video.prompt}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          video.status === 'completed' ? 'bg-green-400' :
+                          video.status === 'failed' ? 'bg-red-400' :
+                          'bg-yellow-400 animate-pulse'
+                        }`} />
+                        <span className="text-gray-400 text-xs capitalize">
+                          {video.status}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {video.videoUrl ? (
+                      <div className="space-y-2">
+                        <video
+                          src={video.videoUrl}
+                          controls
+                          className="w-full h-32 object-cover rounded-md"
+                          poster={video.thumbnailUrl}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                            onClick={() => window.open(video.videoUrl, '_blank')}
+                          >
+                            <Play className="w-3 h-3 mr-1" />
+                            Play
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
+                            onClick={() => {
+                              const a = document.createElement('a');
+                              a.href = video.videoUrl!;
+                              a.download = `generated-video-${video.id}.mp4`;
+                              a.click();
+                            }}
+                          >
+                            <Download className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-32 bg-gray-700/50 rounded-md flex items-center justify-center">
+                        {video.status === 'failed' ? (
+                          <span className="text-red-400 text-sm">Generation failed</span>
+                        ) : (
+                          <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* File Upload */}
         <Card className="mb-8 border-emerald-500/20 bg-black/20 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
@@ -118,7 +332,7 @@ export default function Dashboard() {
             {(uploading || uploadStatus) && (
               <div className="mt-4 text-center">
                 <div className="inline-flex items-center gap-2 text-emerald-400">
-                  {uploading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-400"></div>}
+                  {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
                   <span>{uploadStatus || 'Uploading files...'}</span>
                 </div>
               </div>
@@ -151,17 +365,33 @@ export default function Dashboard() {
                           {formatFileSize(file.size)}
                         </p>
                       </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                        onClick={() => deleteFile(file.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                     
                     {file.type.startsWith('image/') && (
                       <img
                         src={file.url}
                         alt={file.name}
-                        className="w-full h-32 object-cover rounded-md"
+                        className="w-full h-32 object-cover rounded-md mb-3"
                       />
                     )}
                     
-                    <div className="mt-3 flex gap-2">
+                    {file.type.startsWith('video/') && (
+                      <video
+                        src={file.url}
+                        className="w-full h-32 object-cover rounded-md mb-3"
+                        controls
+                      />
+                    )}
+                    
+                    <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
@@ -169,6 +399,19 @@ export default function Dashboard() {
                         onClick={() => window.open(file.url, '_blank')}
                       >
                         View
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+                        onClick={() => {
+                          const a = document.createElement('a');
+                          a.href = file.url;
+                          a.download = file.name;
+                          a.click();
+                        }}
+                      >
+                        <Download className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
@@ -183,7 +426,7 @@ export default function Dashboard() {
             <div className="text-gray-400 mb-4">
               <Upload className="w-16 h-16 mx-auto mb-4 opacity-50" />
               <p className="text-xl">No files uploaded yet</p>
-              <p className="text-sm">Upload your first file to get started</p>
+              <p className="text-sm">Upload your first file or generate a video to get started</p>
             </div>
           </div>
         )}
