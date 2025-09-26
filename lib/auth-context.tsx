@@ -13,7 +13,7 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db, isFirebaseConfigured } from './firebase-config';
+import { auth, db, isFirebaseConfigured, initializeFirebaseServices } from './firebase-config';
 
 interface UserProfile {
   uid: string;
@@ -168,7 +168,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for auth state changes
   useEffect(() => {
-    if (!auth) {
+    // Try to initialize Firebase services
+    const initialized = initializeFirebaseServices();
+    
+    if (!initialized || !auth) {
+      console.log('⚠️ Firebase not initialized - running in demo mode');
       setLoading(false);
       return;
     }

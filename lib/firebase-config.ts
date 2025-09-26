@@ -34,8 +34,24 @@ let auth: any = null;
 let db: any = null;
 let storage: any = null;
 
-// Only initialize if configured and in browser
-if (typeof window !== 'undefined' && isConfigured) {
+// DO NOT initialize Firebase automatically - wait for explicit request
+console.log(isConfigured ? '🔥 Firebase config ready' : '⚠️ Firebase not configured - demo mode');
+
+// Export services (will be null if not configured)
+export { auth, db, storage };
+
+// Initialize Firebase only when explicitly requested
+export const initializeFirebaseServices = () => {
+  if (!isConfigured || typeof window === 'undefined') {
+    console.log('⚠️ Cannot initialize Firebase - not configured or not in browser');
+    return false;
+  }
+
+  if (auth && db && storage) {
+    console.log('🔥 Firebase already initialized');
+    return true;
+  }
+
   try {
     if (getApps().length === 0) {
       app = initializeApp(firebaseConfig);
@@ -47,20 +63,17 @@ if (typeof window !== 'undefined' && isConfigured) {
     db = getFirestore(app);
     storage = getStorage(app);
     
-    console.log('🔥 Firebase initialized successfully');
+    console.log('🔥 Firebase services initialized successfully');
+    return true;
   } catch (error) {
     console.error('Firebase initialization failed:', error);
     app = null;
     auth = null;
     db = null;
     storage = null;
+    return false;
   }
-} else if (typeof window !== 'undefined') {
-  console.log('⚠️ Firebase not configured - demo mode');
-}
-
-// Export services (will be null if not configured)
-export { auth, db, storage };
+};
 
 // Check if Firebase is properly configured
 export const isFirebaseConfigured = () => {
