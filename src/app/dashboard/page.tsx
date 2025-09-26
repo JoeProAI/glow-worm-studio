@@ -17,26 +17,32 @@ const mockUser = {
 export default function Dashboard() {
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string>('');
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     setUploading(true);
     
     try {
       for (const file of acceptedFiles) {
+        setUploadStatus(`Processing ${file.name}...`);
         console.log(`⚡ Processing ${file.name}`);
         
         try {
           const uploadedFile = await MediaService.uploadFile(file, mockUser.uid);
           setFiles(prev => [uploadedFile, ...prev]);
+          setUploadStatus(`✅ ${file.name} uploaded successfully`);
           console.log(`🔥 File uploaded: ${file.name}`);
         } catch (fileError) {
+          setUploadStatus(`❌ Failed to upload ${file.name}: ${fileError}`);
           console.error(`Failed to process ${file.name}:`, fileError);
         }
       }
     } catch (error) {
+      setUploadStatus(`❌ Upload failed: ${error}`);
       console.error('Upload failed:', error);
     } finally {
       setUploading(false);
+      setTimeout(() => setUploadStatus(''), 3000);
     }
   }, []);
 
@@ -64,14 +70,14 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            🪱 Glow Worm Studio
+            Glow Studio
           </h1>
-          <p className="text-gray-300">
+          <p className="text-slate-300">
             Professional Media Management Platform
           </p>
         </div>
@@ -109,11 +115,11 @@ export default function Dashboard() {
               )}
             </div>
             
-            {uploading && (
+            {(uploading || uploadStatus) && (
               <div className="mt-4 text-center">
                 <div className="inline-flex items-center gap-2 text-emerald-400">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-400"></div>
-                  Uploading files...
+                  {uploading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-400"></div>}
+                  <span>{uploadStatus || 'Uploading files...'}</span>
                 </div>
               </div>
             )}
