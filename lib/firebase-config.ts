@@ -1,7 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Check if Firebase is properly configured first
+// Check if Firebase is properly configured
 const hasRequiredConfig = !!(
   firebaseConfig.apiKey &&
   firebaseConfig.authDomain &&
@@ -28,39 +28,35 @@ const hasValidConfig = firebaseConfig.apiKey !== 'your_api_key_here' &&
 
 const isConfigured = hasRequiredConfig && hasValidConfig;
 
-// Initialize Firebase only if properly configured AND in browser
+// Initialize variables
 let app: any = null;
 let auth: any = null;
 let db: any = null;
 let storage: any = null;
 
-// Only initialize in browser and when properly configured
+// Only initialize if configured and in browser
 if (typeof window !== 'undefined' && isConfigured) {
   try {
     if (getApps().length === 0) {
       app = initializeApp(firebaseConfig);
-      console.log('🔥 Firebase app initialized');
     } else {
       app = getApps()[0];
-      console.log('🔥 Using existing Firebase app');
     }
 
-    // Initialize services lazily
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
     
-    console.log('🔥 Firebase services initialized successfully');
+    console.log('🔥 Firebase initialized successfully');
   } catch (error) {
     console.error('Firebase initialization failed:', error);
-    // Reset to null on error
     app = null;
     auth = null;
     db = null;
     storage = null;
   }
 } else if (typeof window !== 'undefined') {
-  console.log('⚠️ Firebase not configured - running in demo mode');
+  console.log('⚠️ Firebase not configured - demo mode');
 }
 
 // Export services (will be null if not configured)

@@ -402,7 +402,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>{formatFileSize(file.size)}</span>
-                    <span>{file.uploadedAt.toLocaleDateString()}</span>
+                    <span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -439,7 +439,7 @@ export default function Dashboard() {
                     </div>
                     <div className="text-right text-sm text-gray-500">
                       <div>{formatFileSize(file.size)}</div>
-                      <div>{file.uploadedAt.toLocaleDateString()}</div>
+                      <div>{new Date(file.uploadedAt).toLocaleDateString()}</div>
                     </div>
                   </div>
                 </CardContent>
