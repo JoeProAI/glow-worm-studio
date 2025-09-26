@@ -172,7 +172,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initialized = initializeFirebaseServices();
     
     if (!initialized || !auth) {
-      console.log('⚠️ Firebase not initialized - running in demo mode');
       setLoading(false);
       return;
     }

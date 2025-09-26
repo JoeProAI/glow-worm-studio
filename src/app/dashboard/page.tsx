@@ -8,10 +8,17 @@ import { Input } from "../../../components/ui/input";
 import { Upload, Image as ImageIcon, Video, File, Sparkles, Play, Download, Trash2, Loader2 } from "lucide-react";
 import { MediaService, MediaFile } from "../../../lib/media-service";
 
-const mockUser = {
-  uid: 'demo-user-123',
-  email: 'demo@example.com',
-  displayName: 'Demo User'
+// Generate a unique user ID for this session
+const getCurrentUserId = () => {
+  if (typeof window !== 'undefined') {
+    let userId = localStorage.getItem('glow-studio-user-id');
+    if (!userId) {
+      userId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('glow-studio-user-id', userId);
+    }
+    return userId;
+  }
+  return `user-${Date.now()}`;
 };
 
 interface GeneratedVideo {
@@ -29,6 +36,7 @@ export default function Dashboard() {
   const [generatingVideo, setGeneratingVideo] = useState(false);
   const [videoPrompt, setVideoPrompt] = useState('');
   const [generatedVideos, setGeneratedVideos] = useState<GeneratedVideo[]>([]);
+  const [userId] = useState(() => getCurrentUserId());
 
   // Load files on mount
   useEffect(() => {
@@ -37,7 +45,7 @@ export default function Dashboard() {
 
   const loadFiles = async () => {
     try {
-      const userFiles = await MediaService.getFiles(mockUser.uid);
+      const userFiles = await MediaService.getFiles(userId);
       setFiles(userFiles);
     } catch (error) {
       console.error('Failed to load files:', error);
@@ -52,7 +60,7 @@ export default function Dashboard() {
         setUploadStatus(`Processing ${file.name}...`);
         
         try {
-          const uploadedFile = await MediaService.uploadFile(file, mockUser.uid);
+          const uploadedFile = await MediaService.uploadFile(file, userId);
           setFiles(prev => [uploadedFile, ...prev]);
           setUploadStatus(`✅ ${file.name} uploaded successfully`);
         } catch (fileError) {
@@ -146,7 +154,7 @@ export default function Dashboard() {
 
   const deleteFile = async (fileId: string) => {
     try {
-      await MediaService.deleteFile(fileId, mockUser.uid);
+      await MediaService.deleteFile(fileId, userId);
       setFiles(prev => prev.filter(f => f.id !== fileId));
     } catch (error) {
       console.error('Failed to delete file:', error);

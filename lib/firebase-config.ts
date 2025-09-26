@@ -1,21 +1,13 @@
 // CLIENT-SIDE FIREBASE COMPLETELY DISABLED
-// All Firebase operations now happen server-side via API routes
+// All Firebase operations happen server-side via API routes
 
-console.log('⚠️ Client-side Firebase disabled - using server-side API');
-
-// Export null services to prevent any client-side Firebase usage
+// Export null services - NO CONSOLE LOGS, NO DEMO MODE MESSAGES
 export const auth = null;
 export const db = null;
 export const storage = null;
 
-// Dummy functions for compatibility
-export const initializeFirebaseServices = () => {
-  console.log('⚠️ Client-side Firebase disabled - all operations via API');
-  return false;
-};
-
-export const isFirebaseConfigured = () => {
-  return false; // Always false on client-side
-};
+// Silent functions - no logging
+export const initializeFirebaseServices = () => false;
+export const isFirebaseConfigured = () => false;
 
 export default null;
