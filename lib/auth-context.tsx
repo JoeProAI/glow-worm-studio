@@ -13,7 +13,7 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { auth, db, isFirebaseConfigured } from './firebase-config';
 
 interface UserProfile {
   uid: string;
