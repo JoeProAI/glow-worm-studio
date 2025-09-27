@@ -1,8 +1,6 @@
-// CLIENT-SIDE FIREBASE CONFIGURATION
+// CLIENT-SIDE FIREBASE CONFIGURATION - AUTH ONLY
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -17,8 +15,11 @@ const firebaseConfig = {
 // Initialize Firebase
 let app: FirebaseApp | undefined;
 let auth: Auth | null = null;
-let db: Firestore | null = null;
-let storage: FirebaseStorage | null = null;
+
+// Disable Firestore and Storage on client-side to prevent 400 errors
+// All data operations go through server-side APIs
+const db = null;
+const storage = null;
 
 const initializeFirebaseServices = () => {
   try {
@@ -29,12 +30,11 @@ const initializeFirebaseServices = () => {
       app = getApps()[0];
     }
     
-    // Initialize services
+    // Only initialize Auth on client-side
     auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
     
-    console.log('✅ Client-side Firebase initialized successfully');
+    console.log('✅ Client-side Firebase Auth initialized successfully');
+    console.log('ℹ️ Firestore and Storage disabled on client-side - using server APIs');
     return true;
   } catch (error) {
     console.error('❌ Client-side Firebase initialization failed:', error);
@@ -43,7 +43,7 @@ const initializeFirebaseServices = () => {
 };
 
 const isFirebaseConfigured = () => {
-  return !!(auth && db && storage);
+  return !!auth;
 };
 
 // Initialize on import

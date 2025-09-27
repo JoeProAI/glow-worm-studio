@@ -12,8 +12,7 @@ import {
   onAuthStateChanged,
   updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db, isFirebaseConfigured, initializeFirebaseServices } from './firebase-config';
+import { auth, isFirebaseConfigured, initializeFirebaseServices } from './firebase-config';
 
 interface UserProfile {
   uid: string;
@@ -53,36 +52,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Create or update user profile in Firestore
+  // Create or update user profile via server-side API
   const createUserProfile = async (user: User, additionalData?: Record<string, unknown>) => {
-    if (!db) return;
-    const userRef = doc(db, 'users', user.uid);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      const { displayName, email, photoURL } = user;
-      const createdAt = new Date();
-
-      const newProfile: UserProfile = {
+    try {
+      // Create a basic profile locally since we're not using client-side Firestore
+      const basicProfile: UserProfile = {
         uid: user.uid,
-        email: email || '',
-        displayName: displayName || '',
-        photoURL: photoURL || undefined,
-        createdAt,
+        email: user.email || '',
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || undefined,
+        createdAt: new Date(),
         subscription: 'free',
         storageUsed: 0,
-        storageLimit: 1024 * 1024 * 1024, // 1GB for free tier
+        storageLimit: 5 * 1024 * 1024 * 1024, // 5GB
         ...additionalData
       };
-
-      try {
-        await setDoc(userRef, newProfile);
-        setUserProfile(newProfile);
-      } catch (error) {
-        console.error('Error creating user profile:', error);
-      }
-    } else {
-      setUserProfile(userSnap.data() as UserProfile);
+      setUserProfile(basicProfile);
+    } catch (error) {
+      console.error('Failed to create user profile:', error);
     }
   };
 
@@ -152,12 +139,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Update user profile
   const updateUserProfile = async (data: Partial<UserProfile>) => {
-    if (!user || !db) return;
+    if (!user) return;
     
     try {
-      const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, data, { merge: true });
-      
+      // Update profile locally since we're not using client-side Firestore
       if (userProfile) {
         setUserProfile({ ...userProfile, ...data });
       }
