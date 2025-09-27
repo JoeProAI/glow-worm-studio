@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
-    if (!auth) throw new Error('Firebase not initialized');
+    if (!auth) throw new Error('Authentication not available - please check Firebase configuration');
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign up with email and password
   const signUp = async (email: string, password: string, displayName: string) => {
-    if (!auth) throw new Error('Firebase not initialized');
+    if (!auth) throw new Error('Authentication not available - please check Firebase configuration');
     setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
@@ -101,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with Google
   const signInWithGoogle = async () => {
-    if (!auth) throw new Error('Firebase not initialized');
+    if (!auth) throw new Error('Authentication not available - please check Firebase configuration');
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with GitHub
   const signInWithGithub = async () => {
-    if (!auth) throw new Error('Firebase not initialized');
+    if (!auth) throw new Error('Authentication not available - please check Firebase configuration');
     setLoading(true);
     try {
       const provider = new GithubAuthProvider();
@@ -127,7 +127,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign out
   const logout = async () => {
-    if (!auth) throw new Error('Firebase not initialized');
+    if (!auth) {
+      // If auth is not available, just clear local state
+      setUser(null);
+      setUserProfile(null);
+      return;
+    }
     try {
       await signOut(auth);
       setUser(null);
@@ -157,6 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initialized = initializeFirebaseServices();
     
     if (!initialized || !auth) {
+      console.log('ℹ️ Firebase Auth not available - running in demo mode');
       setLoading(false);
       return;
     }
