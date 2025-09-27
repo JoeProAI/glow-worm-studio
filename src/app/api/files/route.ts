@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, isFirebaseAdminConfigured } from '../../../../lib/firebase-admin-robust';
+import { adminDb, isFirebaseAdminConfigured } from '../../../../lib/firebase-admin-final';
 
 export async function GET(request: NextRequest) {
   try {

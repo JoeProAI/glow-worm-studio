@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminStorage, adminDb, isFirebaseAdminConfigured } from '../../../../../lib/firebase-admin-robust';
+import { adminStorage, adminDb, isFirebaseAdminConfigured } from '../../../../../lib/firebase-admin-final';
 
 export async function DELETE(
   request: NextRequest,
