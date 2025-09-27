@@ -1,13 +1,53 @@
-// CLIENT-SIDE FIREBASE COMPLETELY DISABLED
-// All Firebase operations happen server-side via API routes
+// CLIENT-SIDE FIREBASE CONFIGURATION
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
-// Export null services - NO CONSOLE LOGS, NO DEMO MODE MESSAGES
-export const auth = null;
-export const db = null;
-export const storage = null;
+// Firebase configuration from environment variables
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+};
 
-// Silent functions - no logging
-export const initializeFirebaseServices = () => false;
-export const isFirebaseConfigured = () => false;
+// Initialize Firebase
+let app: FirebaseApp | undefined;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
 
-export default null;
+const initializeFirebaseServices = () => {
+  try {
+    // Check if Firebase is already initialized
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApps()[0];
+    }
+    
+    // Initialize services
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+    
+    console.log('✅ Client-side Firebase initialized successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Client-side Firebase initialization failed:', error);
+    return false;
+  }
+};
+
+const isFirebaseConfigured = () => {
+  return !!(auth && db && storage);
+};
+
+// Initialize on import
+initializeFirebaseServices();
+
+export { auth, db, storage, initializeFirebaseServices, isFirebaseConfigured };
+export default app;

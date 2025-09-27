@@ -5,21 +5,10 @@ import { useDropzone } from 'react-dropzone';
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
-import { Upload, Image as ImageIcon, Video, File, Sparkles, Play, Download, Trash2, Loader2 } from "lucide-react";
+import { Upload, Image as ImageIcon, Video, File, Sparkles, Play, Download, Trash2, Loader2, LogOut, User } from "lucide-react";
 import { MediaService, MediaFile } from "../../../lib/media-service";
-
-// Generate a unique user ID for this session
-const getCurrentUserId = () => {
-  if (typeof window !== 'undefined') {
-    let userId = localStorage.getItem('glow-studio-user-id');
-    if (!userId) {
-      userId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('glow-studio-user-id', userId);
-    }
-    return userId;
-  }
-  return `user-${Date.now()}`;
-};
+import { useAuth } from "../../../lib/auth-context";
+import { AuthModal } from "../../../components/auth/auth-modal";
 
 interface GeneratedVideo {
   id: string;
@@ -30,18 +19,74 @@ interface GeneratedVideo {
 }
 
 export default function Dashboard() {
+  const { user, userProfile, logout, loading } = useAuth();
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>('');
   const [generatingVideo, setGeneratingVideo] = useState(false);
   const [videoPrompt, setVideoPrompt] = useState('');
   const [generatedVideos, setGeneratedVideos] = useState<GeneratedVideo[]>([]);
-  const [userId] = useState(() => getCurrentUserId());
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-white mx-auto mb-4" />
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign-in prompt if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center p-8">
+          <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-6 flex items-center justify-center">
+            <User className="w-8 h-8 text-black" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-4">Sign In Required</h1>
+          <p className="text-gray-400 mb-8">
+            You need to sign in to access the Glow Studio dashboard and start creating amazing content.
+          </p>
+          <div className="space-y-3">
+            <Button 
+              onClick={() => setAuthModalOpen(true)}
+              className="w-full bg-white text-black hover:bg-gray-100 font-medium"
+            >
+              Sign In to Continue
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/'}
+              className="w-full border-gray-600 text-gray-300 hover:bg-gray-900"
+            >
+              Back to Home
+            </Button>
+          </div>
+        </div>
+        
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode="signin"
+        />
+      </div>
+    );
+  }
+
+  // Get user ID for file operations
+  const userId = user.uid;
 
   // Load files on mount
   useEffect(() => {
-    loadFiles();
-  }, []);
+    if (user) {
+      loadFiles();
+    }
+  }, [user]);
 
   const loadFiles = async () => {
     try {
@@ -178,14 +223,34 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            🎬 Glow Studio Pro
-          </h1>
-          <p className="text-slate-300">
-            AI-Powered Media Creation & Management Platform
-          </p>
+        {/* User Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              🎬 Glow Studio Pro
+            </h1>
+            <p className="text-slate-300">
+              AI-Powered Media Creation & Management Platform
+            </p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <p className="text-white font-medium">{userProfile?.displayName || user.email}</p>
+              <p className="text-slate-400 text-sm">{userProfile?.subscription || 'Free'} Plan</p>
+            </div>
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={logout}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         {/* AI Video Generation */}
