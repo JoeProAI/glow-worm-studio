@@ -12,10 +12,16 @@ const getServiceAccount = () => {
     // Replace literal \n with actual newlines
     privateKey = privateKey.replace(/\\n/g, '\n');
     
-    // Ensure proper formatting
+    // Remove any extra whitespace and ensure proper line breaks
+    privateKey = privateKey.trim();
+    
+    // If it doesn't have the headers, add them
     if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
       privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
     }
+    
+    // Ensure proper line endings
+    privateKey = privateKey.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   }
   
   console.log('🔍 Firebase Admin environment check:', {
