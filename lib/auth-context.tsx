@@ -158,9 +158,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for auth state changes
   useEffect(() => {
-    // Client-side Firebase is disabled - running in server-only mode
-    console.log('ℹ️ Client-side authentication disabled - using server-only mode');
-    setLoading(false);
+    // Try to initialize Firebase services
+    const initialized = initializeFirebaseServices();
+    
+    if (!initialized || !auth) {
+      console.log('ℹ️ Firebase Auth not available - check configuration');
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUser(user);
+        await createUserProfile(user);
+      } else {
+        setUser(null);
+        setUserProfile(null);
+      }
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, []);
 
   const value: AuthContextType = {
