@@ -1,7 +1,17 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { User } from 'firebase/auth';
+import { 
+  User,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  signOut,
+  onAuthStateChanged,
+  updateProfile
+} from 'firebase/auth';
 import { auth, isFirebaseConfigured, initializeFirebaseServices } from './firebase-config';
 
 interface UserProfile {
@@ -65,29 +75,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
-    throw new Error('Client-side authentication is disabled. Please use server-side authentication or enable Firebase Auth.');
+    if (!auth) throw new Error('Firebase Auth not initialized');
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   // Sign up with email and password
   const signUp = async (email: string, password: string, displayName: string) => {
-    throw new Error('Client-side authentication is disabled. Please use server-side authentication or enable Firebase Auth.');
+    if (!auth) throw new Error('Firebase Auth not initialized');
+    setLoading(true);
+    try {
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(user, { displayName });
+      await createUserProfile(user, { displayName });
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   // Sign in with Google
   const signInWithGoogle = async () => {
-    throw new Error('Client-side authentication is disabled. Please use server-side authentication or enable Firebase Auth.');
+    if (!auth) throw new Error('Firebase Auth not initialized');
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   // Sign in with GitHub
   const signInWithGithub = async () => {
-    throw new Error('Client-side authentication is disabled. Please use server-side authentication or enable Firebase Auth.');
+    if (!auth) throw new Error('Firebase Auth not initialized');
+    setLoading(true);
+    try {
+      const provider = new GithubAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   // Sign out
   const logout = async () => {
-    // Just clear local state since Firebase is disabled
-    setUser(null);
-    setUserProfile(null);
+    if (!auth) throw new Error('Firebase Auth not initialized');
+    try {
+      await signOut(auth);
+      setUser(null);
+      setUserProfile(null);
+    } catch (error) {
+      throw error;
+    }
   };
 
   // Update user profile
@@ -106,10 +153,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for auth state changes
   useEffect(() => {
-    // Client-side Firebase is completely disabled
-    console.log('ℹ️ Client-side authentication disabled - using server-only mode');
-    setLoading(false);
-  }, []);
+    let unsubscribe: (() => void) | null = null;
+    
+    // Try to initialize Firebase services
+    const initialized = initializeFirebaseServices();
+    
+    if (!initialized || !auth) {
+      console.log('ℹ️ Firebase Auth not available - check environment variables');
+      setLoading(false);
+      return;
+    }
+
+    unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUser(user);
+        await createUserProfile(user);
+      } else {
+        setUser(null);
+        setUserProfile(null);
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [createUserProfile]);
 
   const value: AuthContextType = {
     user,

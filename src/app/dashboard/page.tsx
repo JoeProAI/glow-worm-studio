@@ -40,13 +40,53 @@ export default function Dashboard() {
     );
   }
 
-  // Generate a demo user ID for file operations (since client auth is disabled)
-  const userId = user?.uid || `demo-user-${Date.now()}`;
+  // Show sign-in prompt if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center p-8">
+          <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-6 flex items-center justify-center">
+            <User className="w-8 h-8 text-black" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-4">Sign In Required</h1>
+          <p className="text-gray-400 mb-8">
+            You need to sign in to access the Glow Studio dashboard and start creating amazing content.
+          </p>
+          <div className="space-y-3">
+            <Button 
+              onClick={() => setAuthModalOpen(true)}
+              className="w-full bg-white text-black hover:bg-gray-100 font-medium"
+            >
+              Sign In to Continue
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/'}
+              className="w-full border-gray-600 text-gray-300 hover:bg-gray-900"
+            >
+              Back to Home
+            </Button>
+          </div>
+        </div>
+        
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode="signin"
+        />
+      </div>
+    );
+  }
+
+  // Get user ID for file operations
+  const userId = user.uid;
 
   // Load files on mount
   useEffect(() => {
-    loadFiles();
-  }, []);
+    if (user) {
+      loadFiles();
+    }
+  }, [user]);
 
   const loadFiles = async () => {
     try {
@@ -195,8 +235,8 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-white font-medium">{userProfile?.displayName || user?.email || 'Demo User'}</p>
-              <p className="text-slate-400 text-sm">{userProfile?.subscription || 'Demo'} Mode</p>
+              <p className="text-white font-medium">{userProfile?.displayName || user.email}</p>
+              <p className="text-slate-400 text-sm">{userProfile?.subscription || 'Free'} Plan</p>
             </div>
             <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
               <User className="w-5 h-5 text-white" />
