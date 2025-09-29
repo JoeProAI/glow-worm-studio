@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { 
   User,
   signInWithEmailAndPassword,
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Create or update user profile via server-side API
-  const createUserProfile = async (user: User, additionalData?: Record<string, unknown>) => {
+  const createUserProfile = useCallback(async (user: User, additionalData?: Record<string, unknown>) => {
     try {
       // Create a basic profile locally since we're not using client-side Firestore
       const basicProfile: UserProfile = {
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Failed to create user profile:', error);
     }
-  };
+  }, []);
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
@@ -158,28 +158,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for auth state changes
   useEffect(() => {
-    // Try to initialize Firebase services
-    const initialized = initializeFirebaseServices();
-    
-    if (!initialized || !auth) {
-      console.log('ℹ️ Firebase Auth not available - check configuration');
-      setLoading(false);
-      return;
-    }
+    let unsubscribe: (() => void) | null = null;
+    let isMounted = true;
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-        await createUserProfile(user);
-      } else {
-        setUser(null);
-        setUserProfile(null);
+    const initAuth = async () => {
+      try {
+        // Try to initialize Firebase services
+        const initialized = initializeFirebaseServices();
+        
+        if (!initialized || !auth) {
+          console.log('ℹ️ Firebase Auth not available - check configuration');
+          if (isMounted) {
+            setLoading(false);
+          }
+          return;
+        }
+
+        unsubscribe = onAuthStateChanged(auth, async (user) => {
+          if (!isMounted) return;
+          
+          try {
+            if (user) {
+              setUser(user);
+              await createUserProfile(user);
+            } else {
+              setUser(null);
+              setUserProfile(null);
+            }
+          } catch (error) {
+            console.error('Error in auth state change:', error);
+          } finally {
+            if (isMounted) {
+              setLoading(false);
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
+    };
 
-    return unsubscribe;
-  }, []);
+    initAuth();
+
+    return () => {
+      isMounted = false;
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [createUserProfile]);
 
   const value: AuthContextType = {
     user,
