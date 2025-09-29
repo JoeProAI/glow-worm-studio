@@ -1,74 +1,22 @@
-// CLIENT-SIDE FIREBASE - LAZY INITIALIZATION
-// Only initialize when actually needed to prevent startup errors
+// CLIENT-SIDE FIREBASE COMPLETELY DISABLED
+// All Firebase operations happen server-side via API routes
+// This eliminates ALL client-side Firebase errors
 
-// Disable Firestore and Storage on client-side to prevent 400 errors
-// All data operations go through server-side APIs
+console.log('ℹ️ Client-side Firebase completely disabled - using server-only mode');
+
+// Export null services - prevents any client-side Firebase usage
+export const auth = null;
 export const db = null;
 export const storage = null;
 
-// Lazy initialization variables
-let auth: any = null;
-let app: any = null;
-let initPromise: Promise<boolean> | null = null;
-
+// Disabled functions - always return false
 export const initializeFirebaseServices = () => {
-  // Return existing promise if initialization is in progress
-  if (initPromise) {
-    return initPromise;
-  }
-
-  // Only initialize in browser environment
-  if (typeof window === 'undefined') {
-    return Promise.resolve(false);
-  }
-
-  initPromise = (async () => {
-    try {
-      // Dynamic imports to prevent SSR issues
-      const { initializeApp, getApps } = await import('firebase/app');
-      const { getAuth } = await import('firebase/auth');
-
-      const firebaseConfig = {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-      };
-
-      // Check if we have the required config
-      if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-        console.log('ℹ️ Firebase client config missing - running in server-only mode');
-        return false;
-      }
-
-      // Check if Firebase is already initialized
-      if (getApps().length === 0) {
-        app = initializeApp(firebaseConfig);
-      } else {
-        app = getApps()[0];
-      }
-      
-      // Initialize Auth service only
-      auth = getAuth(app);
-      
-      console.log('✅ Firebase Auth initialized successfully');
-      console.log('ℹ️ Firestore and Storage disabled on client - using server APIs');
-      return true;
-    } catch (error) {
-      console.error('❌ Firebase Auth initialization failed:', error);
-      return false;
-    }
-  })();
-
-  return initPromise;
+  console.log('ℹ️ Client-side Firebase disabled - using server APIs only');
+  return Promise.resolve(false);
 };
 
 export const isFirebaseConfigured = () => {
-  return !!auth;
+  return false;
 };
 
-// Export auth with getter to ensure it's available after initialization
-export { auth };
-export default app;
+export default null;
