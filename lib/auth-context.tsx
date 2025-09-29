@@ -1,17 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { 
-  User,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-  GithubAuthProvider,
-  signOut,
-  onAuthStateChanged,
-  updateProfile
-} from 'firebase/auth';
+import { User } from 'firebase/auth';
 import { auth, isFirebaseConfigured, initializeFirebaseServices } from './firebase-config';
 
 interface UserProfile {
@@ -75,9 +65,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
+    await initializeFirebaseServices();
     if (!auth) throw new Error('Authentication not available - please check Firebase configuration');
     setLoading(true);
     try {
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       setLoading(false);
@@ -87,9 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign up with email and password
   const signUp = async (email: string, password: string, displayName: string) => {
+    await initializeFirebaseServices();
     if (!auth) throw new Error('Authentication not available - please check Firebase configuration');
     setLoading(true);
     try {
+      const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(user, { displayName });
       await createUserProfile(user, { displayName });
@@ -101,9 +95,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with Google
   const signInWithGoogle = async () => {
+    await initializeFirebaseServices();
     if (!auth) throw new Error('Authentication not available - please check Firebase configuration');
     setLoading(true);
     try {
+      const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (error) {
@@ -114,9 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with GitHub
   const signInWithGithub = async () => {
+    await initializeFirebaseServices();
     if (!auth) throw new Error('Authentication not available - please check Firebase configuration');
     setLoading(true);
     try {
+      const { signInWithPopup, GithubAuthProvider } = await import('firebase/auth');
       const provider = new GithubAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (error) {
@@ -134,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
+      const { signOut } = await import('firebase/auth');
       await signOut(auth);
       setUser(null);
       setUserProfile(null);
@@ -164,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         // Try to initialize Firebase services
-        const initialized = initializeFirebaseServices();
+        const initialized = await initializeFirebaseServices();
         
         if (!initialized || !auth) {
           console.log('ℹ️ Firebase Auth not available - check configuration');
@@ -173,6 +172,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           return;
         }
+
+        // Import onAuthStateChanged dynamically
+        const { onAuthStateChanged } = await import('firebase/auth');
 
         unsubscribe = onAuthStateChanged(auth, async (user) => {
           if (!isMounted) return;
