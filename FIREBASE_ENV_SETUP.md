@@ -12,12 +12,12 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----E
 FIREBASE_STORAGE_BUCKET=glow-worm-studio.firebasestorage.app
 ```
 
-### 🌐 Client-Side Firebase Auth (YOUR ACTUAL KEYS)
+### 🌐 Client-Side Firebase Auth (YOUR ACTUAL KEYS - FIXED STORAGE BUCKET)
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyC4wzMJ4UpiNquW6_3YcQN8-cydz9Cv448
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=glow-worm-studio.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=glow-worm-studio
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=glow-worm-studio.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=glow-worm-studio.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=18261993208
 NEXT_PUBLIC_FIREBASE_APP_ID=1:18261993208:web:4901f225e4ad6a53ec7d0d
 ```
@@ -52,7 +52,7 @@ const firebaseConfig = {
   - ✅ Google (optional)
   - ✅ GitHub (optional)
 
-## 🚀 COPY-PASTE READY FOR VERCEL
+## 🚀 COPY-PASTE READY FOR VERCEL (FIXED STORAGE BUCKET)
 
 **Copy these exact environment variables into your Vercel project:**
 
@@ -60,7 +60,7 @@ const firebaseConfig = {
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyC4wzMJ4UpiNquW6_3YcQN8-cydz9Cv448
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=glow-worm-studio.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=glow-worm-studio
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=glow-worm-studio.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=glow-worm-studio.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=18261993208
 NEXT_PUBLIC_FIREBASE_APP_ID=1:18261993208:web:4901f225e4ad6a53ec7d0d
 ```
