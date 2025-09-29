@@ -12,14 +12,14 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----E
 FIREBASE_STORAGE_BUCKET=glow-worm-studio.firebasestorage.app
 ```
 
-### 🌐 Client-Side Firebase Auth (Need New Keys)
+### 🌐 Client-Side Firebase Auth (YOUR ACTUAL KEYS)
 ```
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyC4wzMJ4UpiNquW6_3YcQN8-cydz9Cv448
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=glow-worm-studio.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=glow-worm-studio
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=glow-worm-studio.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789012
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:abcdef1234567890abcdef
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=18261993208
+NEXT_PUBLIC_FIREBASE_APP_ID=1:18261993208:web:4901f225e4ad6a53ec7d0d
 ```
 
 ## 🎯 How to Get These Values
@@ -52,18 +52,25 @@ const firebaseConfig = {
   - ✅ Google (optional)
   - ✅ GitHub (optional)
 
-## 🚀 Copy-Paste Ready Format for Vercel
+## 🚀 COPY-PASTE READY FOR VERCEL
 
-Once you get your Firebase config, replace the XXX values and paste into Vercel:
+**Copy these exact environment variables into your Vercel project:**
 
 ```
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyC4wzMJ4UpiNquW6_3YcQN8-cydz9Cv448
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=glow-worm-studio.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=glow-worm-studio
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=glow-worm-studio.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789012
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:abcdef1234567890abcdef
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=18261993208
+NEXT_PUBLIC_FIREBASE_APP_ID=1:18261993208:web:4901f225e4ad6a53ec7d0d
 ```
+
+### 📋 How to Add to Vercel:
+1. Go to your Vercel dashboard
+2. Select your `glow-worm-studio` project
+3. Go to Settings → Environment Variables
+4. Add each variable above (one by one)
+5. Deploy your project
 
 ## ✅ What Will Work After Setup
 
