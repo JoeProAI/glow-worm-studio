@@ -28,7 +28,7 @@ export default function Gallery() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const loadUserMedia = useCallback(async () => {
-    if (!user) return;
+    if (!user?.uid) return;
     
     try {
       const userFiles = await MediaService.getUserMedia(user.uid);
@@ -38,7 +38,7 @@ export default function Gallery() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (user) {

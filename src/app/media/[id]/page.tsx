@@ -65,7 +65,7 @@ export default function MediaDetail() {
     } finally {
       setLoading(false);
     }
-  }, [user, params.id]);
+  }, [user?.uid, params.id]);
 
   useEffect(() => {
     if (user && params.id) {

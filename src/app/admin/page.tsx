@@ -55,7 +55,7 @@ export default function AdminPanel() {
   const [refreshing, setRefreshing] = useState(false);
 
   const loadMetrics = useCallback(async () => {
-    if (!user) return;
+    if (!user?.uid) return;
     try {
       setLoading(true);
       
@@ -127,7 +127,7 @@ export default function AdminPanel() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.uid]);
 
   useEffect(() => {
     loadMetrics();

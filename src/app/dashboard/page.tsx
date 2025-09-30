@@ -82,14 +82,14 @@ export default function Dashboard() {
   const userId = user.uid;
 
   const loadFiles = useCallback(async () => {
-    if (!user) return;
+    if (!user?.uid) return;
     try {
       const userFiles = await MediaService.getFiles(user.uid);
       setFiles(userFiles);
     } catch (error) {
       console.error('Failed to load files:', error);
     }
-  }, [user]);
+  }, [user?.uid]);
 
   // Load files on mount
   useEffect(() => {
