@@ -153,61 +153,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for auth state changes
   useEffect(() => {
-    let unsubscribe: (() => void) | null = null;
-    let isMounted = true;
+    // Try to initialize Firebase services
+    const initialized = initializeFirebaseServices();
     
-    const setupAuth = async () => {
-      try {
-        // Try to initialize Firebase services
-        const initialized = initializeFirebaseServices();
-        
-        if (!initialized || !auth) {
-          console.log('ℹ️ Firebase Auth not available - check environment variables');
-          if (isMounted) {
-            setLoading(false);
-          }
-          return;
-        }
+    if (!initialized || !auth) {
+      console.log('ℹ️ Firebase Auth not available - check environment variables');
+      setLoading(false);
+      return;
+    }
 
-        unsubscribe = onAuthStateChanged(auth, async (user) => {
-          if (!isMounted) return;
-          
-          try {
-            if (user) {
-              setUser(user);
-              await createUserProfile(user);
-            } else {
-              setUser(null);
-              setUserProfile(null);
-            }
-          } catch (error) {
-            console.error('Error in auth state change:', error);
-          } finally {
-            if (isMounted) {
-              setLoading(false);
-            }
-          }
-        });
-      } catch (error) {
-        console.error('Error setting up auth:', error);
-        if (isMounted) {
-          setLoading(false);
-        }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+        createUserProfile(user);
+      } else {
+        setUser(null);
+        setUserProfile(null);
       }
-    };
+      setLoading(false);
+    });
 
-    setupAuth();
-
-    return () => {
-      isMounted = false;
-      if (unsubscribe) {
-        try {
-          unsubscribe();
-        } catch (error) {
-          console.error('Error unsubscribing from auth:', error);
-        }
-      }
-    };
+    return () => unsubscribe();
   }, []);
 
   const value: AuthContextType = {
