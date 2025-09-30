@@ -162,15 +162,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        createUserProfile(user);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setLoading(false);
+      
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        // Create profile without awaiting to avoid blocking
+        createUserProfile(firebaseUser).catch(err => 
+          console.error('Profile creation error:', err)
+        );
       } else {
         setUser(null);
         setUserProfile(null);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();

@@ -14,15 +14,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Glow Worm Studio - AI-Powered Media Intelligence",
-  description: "Transform your media with AI. Upload, organize, and create stunning galleries with intelligent categorization and next-level experiences.",
-  keywords: "AI, media, gallery, organization, Luma AI, OpenAI, creative studio",
+  title: "Glow Worm Studio - Professional Media Management",
+  description: "Organize, search, and present your digital assets with enterprise-grade tools designed for professional workflows.",
+  keywords: "media management, digital assets, file organization, media platform, enterprise tools",
   authors: [{ name: "Glow Worm Studio" }],
   creator: "Glow Worm Studio",
   publisher: "Glow Worm Studio",
   openGraph: {
-    title: "Glow Worm Studio - AI-Powered Media Intelligence",
-    description: "Transform your media with AI. Upload, organize, and create stunning galleries with intelligent categorization.",
+    title: "Glow Worm Studio - Professional Media Management",
+    description: "Organize, search, and present your digital assets with enterprise-grade tools designed for professional workflows.",
     url: "https://glowworm.studio",
     siteName: "Glow Worm Studio",
     images: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Glow Worm Studio - AI Media Platform",
+        alt: "Glow Worm Studio - Media Management Platform",
       },
     ],
     locale: "en_US",
@@ -38,8 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Glow Worm Studio - AI-Powered Media Intelligence",
-    description: "Transform your media with AI. Upload, organize, and create stunning galleries.",
+    title: "Glow Worm Studio - Professional Media Management",
+    description: "Organize, search, and present your digital assets with enterprise-grade tools.",
     images: ["/og-image.jpg"],
     creator: "@glowwormstudio",
   },
@@ -62,29 +62,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 min-h-screen`}
       >
-        <div className="relative">
-          {/* Subtle Grid Background */}
-          <div className="fixed inset-0 pointer-events-none opacity-20">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
-              backgroundSize: '50px 50px'
-            }}></div>
-          </div>
-          
-          {/* Subtle Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-cyan-500/5"></div>
-          
-          {/* Main Content */}
-          <div className="relative z-10">
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </div>
-        </div>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
