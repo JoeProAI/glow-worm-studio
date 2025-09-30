@@ -1,219 +1,172 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Button } from "../../components/ui/button";
-import { Upload, Database, Grid3X3, Video, User, LogOut } from "lucide-react";
+import { Card } from "../../components/ui/card";
+import { 
+  Upload, 
+  FolderOpen,
+  Zap,
+  ArrowRight,
+  Shield,
+  Clock,
+  Users,
+  CheckCircle2
+} from "lucide-react";
+import { Navigation } from "../../components/navigation";
 import { AuthModal } from "../../components/auth/auth-modal";
 import { useAuth } from "../../lib/auth-context";
 
 export default function Home() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const { user, userProfile, logout, loading } = useAuth();
+  const { user } = useAuth();
 
-  const handleAuthClick = (mode: 'signin' | 'signup') => {
-    setAuthMode(mode);
-    setAuthModalOpen(true);
+  const handleGetStarted = () => {
+    if (user) {
+      window.location.href = '/dashboard';
+    } else {
+      setAuthMode('signup');
+      setAuthModalOpen(true);
+    }
   };
-  return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Floating Background Elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-white/3 rounded-full blur-lg animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-40 left-1/4 w-40 h-40 bg-white/4 rounded-full blur-2xl animate-pulse" style={{animationDelay: '4s'}}></div>
-        <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-white/3 rounded-full blur-xl animate-pulse" style={{animationDelay: '6s'}}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-white/2 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-black/90 backdrop-blur-xl border-b border-gray-800/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white rounded-lg"></div>
-              <span className="text-xl font-medium text-white">
-                Glow Worm Studio
-              </span>
+  return (
+    <div className="min-h-screen bg-white">
+      <Navigation />
+      
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-4 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="inline-block mb-6 px-4 py-2 bg-blue-50 border border-blue-100 rounded-full">
+            <span className="text-blue-600 text-sm font-semibold">Professional Media Management</span>
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+            Media management<br />
+            <span className="text-blue-600">for modern teams</span>
+          </h1>
+          
+          <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+            Organize, search, and present your digital assets with enterprise-grade tools 
+            designed for professional workflows.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:shadow-xl hover:shadow-blue-600/30"
+              onClick={handleGetStarted}
+            >
+              {user ? 'Go to Dashboard' : 'Start Free Trial'}
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+            <Button 
+              size="lg"
+              variant="outline"
+              className="border-2 border-gray-300 hover:bg-gray-50 text-gray-900 px-8 py-6 text-lg rounded-xl"
+              onClick={() => window.location.href = '/gallery'}
+            >
+              View Gallery
+            </Button>
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="mt-16 flex flex-wrap justify-center items-center gap-8 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              <span>Enterprise Security</span>
             </div>
-            <div className="flex items-center space-x-6">
-              {!loading && (
-                <>
-                  {user ? (
-                    <>
-                      <Button 
-                        variant="ghost" 
-                        className="text-gray-300 hover:text-white"
-                        onClick={() => window.location.href = '/dashboard'}
-                      >
-                        Dashboard
-                      </Button>
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center">
-                            {userProfile?.photoURL ? (
-                              <Image 
-                                src={userProfile.photoURL} 
-                                alt="Profile" 
-                                width={32}
-                                height={32}
-                                className="w-8 h-8 rounded-full" 
-                              />
-                            ) : (
-                              <User className="w-4 h-4 text-white" />
-                            )}
-                          </div>
-                          <span className="text-sm text-gray-300">{userProfile?.displayName}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={logout}
-                          className="text-gray-400 hover:text-white"
-                        >
-                          <LogOut className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <Button 
-                        variant="ghost" 
-                        className="text-white hover:text-gray-300 font-medium"
-                        onClick={() => window.location.href = '/gallery'}
-                      >
-                        Gallery
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        className="text-white hover:text-gray-300 font-medium"
-                      >
-                        Pricing
-                      </Button>
-                      <Button
-                        onClick={() => handleAuthClick('signin')}
-                        variant="ghost"
-                        className="text-white hover:text-gray-300 font-medium"
-                      >
-                        Sign In
-                      </Button>
-                      <Button
-                        onClick={() => handleAuthClick('signup')}
-                        className="bg-white text-black hover:bg-gray-100 font-medium px-6 py-2"
-                      >
-                        Get Started
-                      </Button>
-                    </>
-                  )}
-                </>
-              )}
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              <span>99.9% Uptime</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span>Trusted by Teams</span>
             </div>
           </div>
         </div>
-      </nav>
+      </section>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="mb-12">
-            <h1 className="text-5xl md:text-6xl font-medium mb-6 tracking-tight text-white">
-              Media management
-              <br />
-              for modern teams
-            </h1>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
-              Organize, search, and present your digital assets with enterprise-grade tools 
-              designed for professional workflows.
+      {/* Features Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Everything you need to manage media
+            </h2>
+            <p className="text-xl text-gray-600">
+              Powerful features for teams of all sizes
             </p>
           </div>
-          
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-20">
-            {user ? (
-              <>
-                <Button 
-                  size="lg" 
-                  className="bg-white text-black hover:bg-gray-100 font-medium px-8 py-3"
-                  onClick={() => window.location.href = '/dashboard'}
-                >
-                  Go to Dashboard
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-gray-600 text-gray-300 hover:bg-gray-900 hover:border-gray-500 font-medium px-8 py-3"
-                  onClick={() => window.location.href = '/gallery'}
-                >
-                  View Gallery
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button 
-                  size="lg" 
-                  className="bg-white text-black hover:bg-gray-100 font-medium px-8 py-3"
-                  onClick={() => handleAuthClick('signup')}
-                >
-                  Get Started
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-gray-600 text-gray-300 hover:bg-gray-900 hover:border-gray-500 font-medium px-8 py-3"
-                  onClick={() => window.location.href = '/gallery'}
-                >
-                  View Demo
-                </Button>
-              </>
-            )}
-          </div>
 
-          {/* Feature Grid */}
-          <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto relative z-10">
-            <div className="text-left">
-              <h3 className="text-xl font-medium text-white mb-3">Asset Management</h3>
-              <p className="text-gray-500 leading-relaxed text-sm">
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <Card className="p-8 border-2 border-gray-100 hover:border-blue-100 hover:shadow-lg transition-all">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                <Upload className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Asset Management</h3>
+              <p className="text-gray-600 leading-relaxed">
                 Centralized storage and organization system for all your digital assets with advanced search and filtering capabilities.
               </p>
-            </div>
+            </Card>
 
-            <div className="text-left">
-              <h3 className="text-xl font-medium text-white mb-3">Gallery Views</h3>
-              <p className="text-gray-500 leading-relaxed text-sm">
+            {/* Feature 2 */}
+            <Card className="p-8 border-2 border-gray-100 hover:border-blue-100 hover:shadow-lg transition-all">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                <FolderOpen className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Gallery Views</h3>
+              <p className="text-gray-600 leading-relaxed">
                 Multiple presentation formats including grid, timeline, and custom layouts optimized for different content types.
               </p>
-            </div>
+            </Card>
 
-            <div className="text-left">
-              <h3 className="text-xl font-medium text-white mb-3">Workflow Tools</h3>
-              <p className="text-gray-500 leading-relaxed text-sm">
+            {/* Feature 3 */}
+            <Card className="p-8 border-2 border-gray-100 hover:border-blue-100 hover:shadow-lg transition-all">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                <Zap className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Workflow Tools</h3>
+              <p className="text-gray-600 leading-relaxed">
                 Integrated processing pipeline with batch operations, metadata management, and export functionality.
               </p>
-            </div>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-gray-800 relative z-10">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-medium text-white mb-4">
+      <section className="py-20 px-4 bg-gradient-to-br from-blue-600 to-blue-700">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Ready to get started?
           </h2>
-          <p className="text-gray-500 mb-8">
+          <p className="text-xl text-blue-100 mb-10">
             Join teams at leading companies who trust our platform for their media workflows.
           </p>
           <Button 
-            size="lg" 
-            className="bg-white text-black hover:bg-gray-100 font-medium px-8 py-3"
-            onClick={() => handleAuthClick('signup')}
+            size="lg"
+            className="bg-white text-blue-600 hover:bg-gray-50 px-8 py-6 text-lg rounded-xl shadow-2xl font-semibold"
+            onClick={handleGetStarted}
           >
-            Get Started
+            {user ? 'Go to Dashboard' : 'Start Free Trial'}
+            <ArrowRight className="ml-2 w-5 h-5" />
           </Button>
         </div>
       </section>
 
-      {/* Auth Modal */}
+      {/* Footer */}
+      <footer className="py-12 px-4 bg-gray-50 border-t border-gray-200">
+        <div className="max-w-6xl mx-auto text-center">
+          <p className="text-gray-600">
+            © 2025 Glow Worm Studio. All rights reserved.
+          </p>
+        </div>
+      </footer>
+
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
