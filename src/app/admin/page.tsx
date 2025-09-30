@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
@@ -54,13 +54,8 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      loadMetrics();
-    }
-  }, [user]);
-
-  const loadMetrics = async () => {
+  const loadMetrics = useCallback(async () => {
+    if (!user) return;
     try {
       setLoading(true);
       
@@ -132,7 +127,11 @@ export default function AdminPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    loadMetrics();
+  }, [loadMetrics]);
 
   const refreshMetrics = async () => {
     setRefreshing(true);

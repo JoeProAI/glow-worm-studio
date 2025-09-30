@@ -81,21 +81,20 @@ export default function Dashboard() {
   // Get user ID for file operations
   const userId = user.uid;
 
-  // Load files on mount
-  useEffect(() => {
-    if (user) {
-      loadFiles();
-    }
-  }, [user]);
-
-  const loadFiles = async () => {
+  const loadFiles = useCallback(async () => {
+    if (!user) return;
     try {
-      const userFiles = await MediaService.getFiles(userId);
+      const userFiles = await MediaService.getFiles(user.uid);
       setFiles(userFiles);
     } catch (error) {
       console.error('Failed to load files:', error);
     }
-  };
+  }, [user]);
+
+  // Load files on mount
+  useEffect(() => {
+    loadFiles();
+  }, [loadFiles]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     setUploading(true);
